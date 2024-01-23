@@ -2,3 +2,9 @@
 alabaster
 decorator
 sphinx
+numpy
+pandas
+scipy
+tomli
+statsmodels
+pyyaml
