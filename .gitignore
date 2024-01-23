@@ -1,0 +1,8 @@
+*.swp
+shipgrav/__pycache__/
+example-scripts/data/
+
+docs/*
+!docs/_build/
+docs/_build/*
+!docs/_build/html
