@@ -16,7 +16,7 @@ To run the example scripts, you will also need matplotlib.
 shipgrav can be installed using `pip`.
 
 ## Documentation and usage
-To view the shipgrav documentation, open `docs/_build/html/index.html` in your browser. Eventually we'll also put those docs online.
+The shipgrav documentation is available online at [shipgrav.readthedocs.io](https://shipgrav.readthedocs.io/). It can also be accessed offline by opening `docs/_build/html/index.html` in your browser.
 
 ## Contributing to shipgrav
 Please do! If you have ideas for how to make shipgrav better, you can raise an issue on github or contact PFPE.
