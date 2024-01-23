@@ -1,0 +1,21 @@
+[bias-values]
+Atlantis = {'dgs'=969758.4968, 'bgm'=855580.65}
+Thompson = {'dgs'=969527.3497, 'bgm'=855489.8}
+Revelle = {'dgs'=968888.6465, 'bgm'=855240.81987}
+NBP = {'dgs'=968634.2514, 'bgm'=-999}
+Ride = {'dgs'=968895.7718, 'bgm'=-999}
+
+[nav-talkers]
+Atlantis = 'GPGGA'
+Thompson = 'INGGA'
+NBP = 'GPGGA'
+Ride = 'INGGA'
+Revelle = 'GPGGA'
+
+[BGM-scale]
+Atlantis = 4.994070552
+Thompson = 5.003353363
+Revelle = 4.99980755
+
+[dgs-stuff]
+calibration_factor = 8388607

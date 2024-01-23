@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shipgrav"
+version = "1.0.0"
+authors = [
+    {name = "Hannah F. Mark", email = "hmark@whoi.edu"},
+]
+maintainers = [
+    {name = "Hannah F. Mark", email = "hmark@whoi.edu"},
+]
+description = "Functions for marine gravity data processing and reduction"
+keywords = ["marine gravity", "gravimetry", "UNOLS"]
+readme = "readme.md"
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "tomli",
+    "matplotlib",
+    "statsmodels",
+    "pyyaml"
+]
