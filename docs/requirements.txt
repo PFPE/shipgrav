@@ -1,0 +1,4 @@
+# requirements to build the docs
+alabaster
+decorator
+sphinx
