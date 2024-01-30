@@ -1,4 +1,7 @@
 # shipgrav
+[![build status](https://github.com/hfmark/shipgrav/workflows/tests/badge.svg)](https://github.com/hfmark/shipgrav/actions)
+[![codecov](https://codecov.io/gh/hfmark/shipgrav/graph/badge.svg?token=SN8EVDDHWG)](https://codecov.io/gh/hfmark/shipgrav)
+
 shipgrav is a Python package designed for reading, processing, and reducing marine gravity data from UNOLS ships. It is created and maintained by PFPE for the marine gravimetry community. The shipgrav repository also contains scripts with example workflows for gravity data processing and reduction.
 
 ## Dependencies
@@ -8,7 +11,7 @@ scipy\
 pandas 2.0+\
 statsmodels\
 tomli\
-pyyaml\
+pyyaml
 
 To run the example scripts, you will also need matplotlib.
 
