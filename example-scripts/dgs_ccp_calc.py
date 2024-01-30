@@ -25,7 +25,7 @@ dgs_path = os.path.join(root,ship,cruise,'gravimeter/DGS')
 dgs_files = np.sort(glob(os.path.join(dgs_path,'AT1M*.dat')))
 
 # read and sort the gravimeter data
-dgs_data = sgi.read_dat_dgs(dgs_files, ship, scale_ccp=False)
+dgs_data = sgi.read_dat_dgs(dgs_files, ship)
 dgs_data.sort_values('date_time',inplace=True)
 dgs_data.reset_index(inplace=True,drop=True)
 dgs_data['tsec'] = [e.timestamp() for e in dgs_data['date_time']]  # get posix timestamps
