@@ -83,7 +83,7 @@
 </section>
 <section id="example-scripts">
 <h2>Example scripts<a class="headerlink" href="#example-scripts" title="Link to this heading">¶</a></h2>
-<p>The scripts in the <code class="docutils literal notranslate"><span class="pre">example-scripts</span></code> directory use sample files in <code class="docutils literal notranslate"><span class="pre">example-scripts/data/</span></code> to run through some common workflows.</p>
+<p>The scripts in the <code class="docutils literal notranslate"><span class="pre">example-scripts</span></code> directory use sample files to run through some common workflows. The sample data files are not available on github because of file size limits but we’re working on making them available for download elsewhere.</p>
 <p><code class="docutils literal notranslate"><span class="pre">dgs_bgm_comp.py</span></code> reads data from DGS and BGM gravimeter files from R/V Thompson cruise TN400. The files are lightly processed to obtain the FAA (including syncing with navigation data for more accurate locations), and the FAA is plotted alongside corresponding satellite-derived FAA.</p>
 <p><code class="docutils literal notranslate"><span class="pre">dgs_raw_comp.py</span></code> reads laptop and serial data from R/V Sally Ride cruise SR2312. The serial data are calibrated and compared to the laptop data. The laptop data are processed to FAA and plotted alongside satellite-derived FAA.</p>
 <p><code class="docutils literal notranslate"><span class="pre">dgs_ccp_calc.py</span></code> reads an example set of laptop files provided by DGS, calculates the FAA and various kinematic variables, and fits for cross-coupling coefficients. The coefficients derived from the data are compared to values that were provided by DGS. The cross-coupling correction is applied and the data are plotted with and without correction.</p>
@@ -234,17 +234,39 @@ work that’s probably why.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="shipgrav.grav.calc_ccp">
 <span class="sig-prename descclassname"><span class="pre">shipgrav.grav.</span></span><span class="sig-name descname"><span class="pre">calc_ccp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">faa_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vcc_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ve_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">al_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samplerate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.grav.calc_ccp" title="Link to this definition">¶</a></dt>
-<dd><p>Daniel Aliod’s version of calculating cross-coupling coefficients from some data
-tbh I am not quite sure what the level corr should be here (which version of tilt?)
-times kwarg for vector of timestamps to divide data into continuous sections</p>
+<dd><p>Daniel Aliod’s version of calculating cross-coupling coefficients from some data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>faa_in</strong> – free air anomaly, filtered</p></li>
+<li><p><strong>vcc_in</strong> – vcc monitor</p></li>
+<li><p><strong>ve_in</strong> – ve monitor</p></li>
+<li><p><strong>al_in</strong> – al monitor</p></li>
+<li><p><strong>ax_in</strong> – ax monitor</p></li>
+<li><p><strong>level_in</strong> – tilt/leveling correction, which is still slightly mysterious. 
+Use a vector of zeros to ignore this component.</p></li>
+<li><p><strong>times</strong> – optional, vector of timestamps to use for dividing the data
+into continuous sections</p></li>
+<li><p><strong>samplerate</strong> – optional, used with times to determine where there
+are large sampling gaps in the data</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="shipgrav.grav.center_diff">
 <span class="sig-prename descclassname"><span class="pre">shipgrav.grav.</span></span><span class="sig-name descname"><span class="pre">center_diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.grav.center_diff" title="Link to this definition">¶</a></dt>
-<dd><p>numerical derivatives, central difference of nth order
-samp is sampling rate
-n (order) is 1 or 2</p>
+<dd><p>numerical derivatives, central difference of nth order</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> – data vector</p></li>
+<li><p><strong>n</strong> – order, should be 1 or 2</p></li>
+<li><p><strong>samp</strong> – sampling rate</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -280,20 +302,41 @@ if back=True)</p>
 <span class="sig-prename descclassname"><span class="pre">shipgrav.grav.</span></span><span class="sig-name descname"><span class="pre">eotvos_full</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ht</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6378137.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6356752.3142</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.grav.eotvos_full" title="Link to this definition">¶</a></dt>
 <dd><p>Full Eotvos correction in mGals</p>
 <p>From Harlan 1968, “Eotvos Corrections for Airborne Gravimetry” JGR 73(14)
-original matlab script written by Sandra Preaux, NGS, NOAA August 24 2009
-components:
-* rdoubledot
-* angular acceleration of the reference frame
-* corliolis
-* centrifugal
-* centrifugal acceleration of Earth</p>
+original matlab script written by Sandra Preaux, NGS, NOAA August 24 2009</p>
+<p>components:</p>
+<ul class="simple">
+<li><p>rdoubledot</p></li>
+<li><p>angular acceleration of the reference frame</p></li>
+<li><p>corliolis</p></li>
+<li><p>centrifugal</p></li>
+<li><p>centrifugal acceleration of Earth</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lon</strong> – longitudes in degrees, vector</p></li>
+<li><p><strong>lat</strong> – latitudes in degrees, vector</p></li>
+<li><p><strong>ht</strong> – elevation (wrt sea level?), vector</p></li>
+<li><p><strong>samp</strong> – samplint rate</p></li>
+<li><p><strong>a</strong> – optional, major axis of ellipsoid (default is WGS84)</p></li>
+<li><p><strong>b</strong> – optional, minor axis of ellipsoid (default is WGS84)</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="shipgrav.grav.fa_2ord">
 <span class="sig-prename descclassname"><span class="pre">shipgrav.grav.</span></span><span class="sig-name descname"><span class="pre">fa_2ord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ht</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.grav.fa_2ord" title="Link to this definition">¶</a></dt>
-<dd><p>2nd order free-air correction
-based on latitude (degrees) and height (meters)</p>
+<dd><p>2nd order free-air correction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lat</strong> – latitude, degrees</p>
+</dd>
+<dt class="field-even">Parma height<span class="colon">:</span></dt>
+<dd class="field-even"><p>elevation, meters</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -341,7 +384,8 @@ Tidal contribution(s) returned are in mGal.</p>
 <li><p><strong>lat</strong> – latitude in decimal degrees, positive N, np.ndarray or list</p></li>
 <li><p><strong>times</strong> – times for geographic locations, datetime.datetime in np.ndarray or list</p></li>
 <li><p><strong>alt</strong> – altitude in meters (0 for sea level, for marine grav)</p></li>
-<li><p><strong>return_components</strong> – bool; if True, return lunar/solar/total. If False, return only the total tidal effect.</p></li>
+<li><p><strong>return_components</strong> – bool; if True, return lunar/solar/total. If False, 
+return only the total tidal effect.</p></li>
 </ul>
 </dd>
 </dl>
@@ -468,17 +512,21 @@ University Press. DOI: 10.1017/CBO9780511843877</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="shipgrav.grav.up_vecs">
 <span class="sig-prename descclassname"><span class="pre">shipgrav.grav.</span></span><span class="sig-name descname"><span class="pre">up_vecs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cacc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lacc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_off</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cper</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cdamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lper</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ldamp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.grav.up_vecs" title="Link to this definition">¶</a></dt>
-<dd><p>Calculate 3xN matrix of platform up-pointing vectors in
-(cross, long, up) coordinates
-the on_off flag is still kind of mysterious to me but if it is
+<dd><p>Calculate 3xN matrix of platform up-pointing vectors in (cross, long) coordinates</p>
+<p>the on_off flag is still kind of mysterious to me but if it is
 0 then things are actually calculated; if &gt;0 then the
-accelerations get zeroed out?</p>
+accelerations get zeroed out</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="shipgrav.grav.wgs_grav">
 <span class="sig-prename descclassname"><span class="pre">shipgrav.grav.</span></span><span class="sig-name descname"><span class="pre">wgs_grav</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.grav.wgs_grav" title="Link to this definition">¶</a></dt>
 <dd><p>Theoretical gravity for WGS84 ellipsoid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lat</strong> – latitude, degrees</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -571,16 +619,14 @@ It writes out a toml file named by default as ini_file:r.toml</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="shipgrav.utils.gaussian_filter">
-<span class="sig-prename descclassname"><span class="pre">shipgrav.utils.</span></span><span class="sig-name descname"><span class="pre">gaussian_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.utils.gaussian_filter" title="Link to this definition">¶</a></dt>
-<dd><p>Apply a gaussian filter to a time series.</p>
+<span class="sig-prename descclassname"><span class="pre">shipgrav.utils.</span></span><span class="sig-name descname"><span class="pre">gaussian_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#shipgrav.utils.gaussian_filter" title="Link to this definition">¶</a></dt>
+<dd><p>Apply a gaussian filter to a vector.</p>
 <p>The filtering is done via a ring buffer; results are not identical to 
 scipy.ndimage.gaussian_filter, which is why this function exists.
-Times are not used but are taken as an argument for completeness.
 Note that the filter is not applied symmetrically and there is a shift by fl.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>t</strong> – time points for time series.</p></li>
 <li><p><strong>x</strong> – time series data to be filtered.</p></li>
 <li><p><strong>fl</strong> – length of the filter in # of samples.</p></li>
 </ul>

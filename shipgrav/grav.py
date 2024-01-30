@@ -49,7 +49,8 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
     :param lat: latitude in decimal degrees, positive N, np.ndarray or list
     :param times: times for geographic locations, datetime.datetime in np.ndarray or list
     :param alt: altitude in meters (0 for sea level, for marine grav)
-    :param return_components: bool; if True, return lunar/solar/total. If False, return only the total tidal effect.
+    :param return_components: bool; if True, return lunar/solar/total. If False, 
+        return only the total tidal effect.
     """
 
     assert len(lon) == len(lat), 'lengths of input vectors must be the same'
@@ -176,12 +177,21 @@ def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
 
     From Harlan 1968, "Eotvos Corrections for Airborne Gravimetry" JGR 73(14)
     original matlab script written by Sandra Preaux, NGS, NOAA August 24 2009
+
     components:
+
     * rdoubledot
     * angular acceleration of the reference frame
     * corliolis
     * centrifugal
     * centrifugal acceleration of Earth
+
+    :param lon: longitudes in degrees, vector
+    :param lat: latitudes in degrees, vector
+    :param ht: elevation (wrt sea level?), vector
+    :param samp: samplint rate
+    :param a: optional, major axis of ellipsoid (default is WGS84)
+    :param b: optional, minor axis of ellipsoid (default is WGS84)
     """
     We=0.00007292115    # siderial rotation rate, radians/sec
     mps2mgal=100000     # m/s/s to mgal
@@ -253,7 +263,9 @@ def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
 
 def fa_2ord(lat,ht):
     """ 2nd order free-air correction
-    based on latitude (degrees) and height (meters)
+
+    :param lat: latitude, degrees
+    :parma height: elevation, meters
     """
     s2lat = np.sin(np.deg2rad(lat))**2
 
@@ -261,6 +273,8 @@ def fa_2ord(lat,ht):
 
 def wgs_grav(lat):
     """ Theoretical gravity for WGS84 ellipsoid
+
+    :param lat: latitude, degrees
     """
     sinsq = np.sin(np.deg2rad(lat))**2
 
@@ -274,8 +288,18 @@ def wgs_grav(lat):
 
 def calc_ccp(faa_in,vcc_in,ve_in,al_in,ax_in,level_in,times=None,samplerate=1):
     """ Daniel Aliod's version of calculating cross-coupling coefficients from some data
-    tbh I am not quite sure what the level corr should be here (which version of tilt?)
-    times kwarg for vector of timestamps to divide data into continuous sections
+
+    :param faa_in: free air anomaly, filtered
+    :param vcc_in: vcc monitor
+    :param ve_in: ve monitor
+    :param al_in: al monitor
+    :param ax_in: ax monitor
+    :param level_in: tilt/leveling correction, which is still slightly mysterious. 
+        Use a vector of zeros to ignore this component.
+    :param times: optional, vector of timestamps to use for dividing the data
+        into continuous sections
+    :param samplerate: optional, used with times to determine where there
+        are large sampling gaps in the data
     """
 
     end_inds = np.array([len(faa_in),])  # just the one
@@ -361,8 +385,10 @@ def calc_ccp(faa_in,vcc_in,ve_in,al_in,ax_in,level_in,times=None,samplerate=1):
 
 def center_diff(y,n,samp):
     """ numerical derivatives, central difference of nth order
-    samp is sampling rate
-    n (order) is 1 or 2
+
+    :param y: data vector
+    :param n: order, should be 1 or 2
+    :param samp: sampling rate
     """
     if n == 1:
         return (y[2:] - y[:-2])*(samp/2)
@@ -374,11 +400,11 @@ def center_diff(y,n,samp):
 
 
 def up_vecs(dt, g, cacc, lacc, on_off, cper, cdamp, lper, ldamp):
-    """ Calculate 3xN matrix of platform up-pointing vectors in
-    (cross, long, up) coordinates
+    """ Calculate 3xN matrix of platform up-pointing vectors in (cross, long) coordinates
+
     the on_off flag is still kind of mysterious to me but if it is
     0 then things are actually calculated; if >0 then the
-    accelerations get zeroed out?
+    accelerations get zeroed out
     """
     # clean out any nans in the accelerations
     cacc[np.isnan(cacc)] = 0
@@ -410,9 +436,10 @@ def up_vecs(dt, g, cacc, lacc, on_off, cper, cdamp, lper, ldamp):
 
 def _tilt_filter(per,dt,damp=False):
     """ Filter coefficitnes for L&R platform tilt computation
-    per = platform period, seconds
-    dt = sample increment, seconds
-    damp = platform damping (optional, default = sqrt(2)/2
+
+    :param per: platform period, seconds
+    :param dt: sample increment, seconds
+    :param damp: optional, platform damping; default = sqrt(2)/2
     """
 
     if not damp: damp = np.sqrt(2)/2
@@ -446,7 +473,9 @@ def _tilt_filter(per,dt,damp=False):
 
 def _calc_up_vecs(ctilt,ltilt):
     """ calculate 3xN matrix of platform up-vectors in (cross, long, up) coordinates
-    ctilt and ltilt are vectors of cross- and long-axis tilt angles in radians
+
+    :param ctilt: cross-axis tilt angles in radians
+    :param ltilt: long-axis tilt angles in radians
     """
 
     # get increments, assuming initial is 0
