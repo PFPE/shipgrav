@@ -1,0 +1,160 @@
+################################################################################
+# IXBlue PHINS III MRU GPS [from the ABX-Two], attitude, and heading
+#
+# See README.md in this directory
+######################################
+IXBlueHydrins:
+  category: "device_type"
+  description: "IXBlue Hydrins MRU GPS"
+
+  format:
+    PHZDA: '${:.2}ZDA,{GPSTime:g},{GPSDay:d},{GPSMonth:d},{GPSYear:d},{LocalHours:od},{LocalZone:od}*{CheckSum:x}'
+    PHGGA: '${:.2}GGA,{GPSTime:g},{Latitude:nlat_dir},{Longitude:nlat_dir},{FixQuality:d},{NumSats:d},{HDOP:of},{AntennaHeight:of},M,{GeoidHeight:of},M,{LastDGPSUpdate:of},{DGPSStationID:od}*{CheckSum:x}'
+    PHVTG: '${:.2}VTG,{CourseTrue:of},T,{CourseMag:of},M,{SpeedKt:of},N,{SpeedKm:of},K,{Mode:w}*{CheckSum:x}'
+    PHGST: '${:.2}GST,{GPSTime:g},{ResidualRMS:g},{ErrorEllipseSemiMajor:g},{ErrorEllipseSemiMinor:g},{ErrorEllipseOrientation:g},{LatitudeError:g},{LongitudeError:g},{HeightError:g}*{CheckSum:x}'
+    HEHDT: '${:.2}HDT,{HeadingTrue:og},T*{CheckSum:x}'
+    PASHR: '$PASHR,{GPSTime:g},{HeadingTrue:g},T,{Pitch:g},{Roll:g},{Heave:g},{AccuracyPitch:g},{AccuracyRoll:g},{AccuracyHeave:g},{FlagAccuracyHeading:d},{FlagIMU:d}*{Checksum:x}'
+
+  ########
+  # Optional metadata to help make sense of the parsed values.
+  fields:
+    # GPZDA
+    GPSTime:
+      units: ""
+      description: "UTC of position fix in hhmmss.ss"
+    GPSDay:
+      units: ""
+      description: ""
+    GPSMonth:
+      units: ""
+      description: ""
+    GPSYear:
+      units: ""
+      description: ""
+    LocalHours:
+      units: ""
+      description: ""
+    LocalZone:
+      description: "Local time zone"
+
+    # GPGLL
+    Latitude:
+      units: "degrees"
+      description: "Latitude in degrees north; negative for south latitude"
+    Longitude:
+      units: "degrees"
+      description: "Longitude in degrees east; negative for west longitude"
+    FixTime:
+      description: "UTC of position fix in hhmmss.ss format"
+    DataValid:
+      description: "A = data valid V = data invalid"
+    Mode:
+      description: "Mode Indicator: A-Autonomous, M-Manual, D-Differential, S-Simulator, E-Dead Reckoning, N-Data Not Valid"
+
+    # $GPGGA
+    FixQuality:
+      Description: "GPS quality indicator: 0 = fix not available or invalid, 1 = GPS SPS mode, fix valid, 2 = differential GPS, SPS mode, fix valid, 3 = GPS PPS mode, fix valid, 4 = Real Time Kinematic. Satellite system used in RTK mode with fixed integers, 5 = Float RTK. Satellite system used in RTK mode with floating integers, 6 = Estimated (dead reckoning) mode, 7 = Manual input mode"
+    NumSats:
+      description: "Number of satellites in use (00-12)"
+    HDOP:
+      description: "Horizontal DOP"
+    AntennaHeight:
+      units: "Meters"
+      description: "Antenna height above/below MSL (mean sea level) reference"
+    GeoidHeight:
+      units: "Meters"
+      description: "Geoidal separation (e.g. -33.81 m)"
+    LastDGPSUpdate:
+      description: "Age of differential GPS data record"
+    DGPSStationID:
+      description: "Differential Reference Station ID (0000-1023)"
+
+    # GPRMC
+    SpeedKt:
+      units: "Knots"
+      description: "Speed over ground in knots"
+    CourseTrue:
+      units: "Degrees"
+      description: "Course over ground, True"
+    MagneticVar:
+      units: "Degrees"
+      description: "Magnetic variation"
+    MagneticVarEorW:
+      description: "Direction of magnetic variation (E - East, W - West)"
+
+    # GPVTG
+    CourseMag:
+      units: "Degrees"
+      description: "Course over ground, Magnetic"
+    SpeedKm:
+      units: "Km/hour"
+      description: "Speed over ground in Km/hour"
+
+    # GNGST
+    ResidualRMS:
+      units: ""
+      description: "RMS of pseudo-range residuals"
+    ErrorEllipseSemiMajor:
+      units: "Meters"
+      description: "Error ellipse semi-major axis 1 sigma error"
+    ErrorEllipseSemiMinor:
+      units: "Meters"
+      description: "Error ellipse semi-minor axis 1 sigma error"
+    ErrorEllipseOrientation:
+      units: "Degrees"
+      description: "Error ellipse orientation"
+    LatitudeError:
+      units: "Meters"
+      description: "Latitude 1 sigma error"
+    LongitudeError:
+      units: "Meters"
+      description: "Longitude 1 sigma error"
+    HeightError:
+      units: "Meters"
+      description: "Height 1 sigma error"
+
+    # GPHDT
+    HeadingTrue:
+      units: "Degrees"
+      description: "Heading, True"
+
+    # PASHR_VEL
+    EastingVelocity:
+      units: "Meters/sec"
+      description: "Easting velocity"
+    EastingVelocity:
+      units: "Meters/sec"
+      description: "Easting velocity"
+    NorthingVelocity:
+      units: "Meters/sec"
+      description: "Northing velocity"
+    VerticalVelocity:
+      units: "Meters/sec"
+      description: "Vertical velocity"
+    EastingVelocityRMS:
+      units: "MM/sec"
+      description: "Easting velocity RMS"
+    NorthingVelocityRMS:
+      units: "MM/sec"
+      description: "Northing velocity RMS"
+    VerticalVelocityRMS:
+      units: "MM/sec"
+      description: "Vertical velocityRMS"
+
+    # PASHR POSMV
+    Pitch:
+      units: "Degrees"
+    Roll:
+      units: "Degrees"
+    Heave:
+      units: "Meters"
+    AccuracyPitch:
+      units: "Degrees"
+    AccuracyRoll:
+      units: "Degrees"
+    AccuracyHeave:
+      units: "Meters"
+    FlagAccuracyHeading:
+      description: "0 = no aiding, 1 = GNSS aiding, 2 = GNSS & GAMS aiding"
+    FlagIMU:
+      description: "0 = IMU out, 1 = satisfactory"

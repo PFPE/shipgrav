@@ -1,4 +1,4 @@
 *.swp
 shipgrav/__pycache__/
 example-scripts/data/
-
+shipgrav/tests/__pycache__/
