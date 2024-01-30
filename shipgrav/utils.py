@@ -5,15 +5,13 @@ import re
 
 # TODO gaussian filter doesn't *need* time array
 
-def gaussian_filter(t, x, fl):
-    """ Apply a gaussian filter to a time series.
+def gaussian_filter(x, fl):
+    """ Apply a gaussian filter to a vector.
 
     The filtering is done via a ring buffer; results are not identical to 
     scipy.ndimage.gaussian_filter, which is why this function exists.
-    Times are not used but are taken as an argument for completeness.
     Note that the filter is not applied symmetrically and there is a shift by fl.
 
-    :param t: time points for time series.
     :param x: time series data to be filtered.
     :param fl: length of the filter in # of samples.
     """
@@ -28,16 +26,14 @@ def gaussian_filter(t, x, fl):
     ring_buffer = np.zeros(filt_len)
 
     xfilt = np.zeros(len(x))
-    tfilt = np.zeros(len(x))
 
     for i in range(len(x)):
         ring_buffer = np.append(ring_buffer[1:], x[i])
         filt_vec = ring_buffer*coeffs
 
         xfilt[i] = sum(filt_vec)
-        tfilt[i] = t[i]
 
-    return tfilt, xfilt
+    return xfilt
 
 
 def _gaussian_coeffs(fl):
