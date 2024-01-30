@@ -17,7 +17,6 @@ def gaussian_filter(x, fl):
     """
 
     assert len(x) > fl, 'raw data is shorter than gaussian filter'
-    assert len(x) == len(t), 'time series data is shorter than time points series'
 
     coeffs = _gaussian_coeffs(fl)
 

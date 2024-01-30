@@ -15,6 +15,10 @@ def ll2en(lon,lat,freq=1):
     :param freq: frequency of the position data, Hz (default: 1 Hz)
     """
 
+    assert hasattr(lon,'__len__') and hasattr(lat,'__len__'), 'lon and lat must be lists or arrays'
+    assert len(lon) == len(lat), 'lon and lat must be the same length'
+    assert len(lon) > 10, 'at least 11 data points required'
+
     a = 6378137.0       # WGS84 semi-major
     b = 6356752.3142451 # WGS84 semi-minor
     e2 = 1 - b**2/a**2  # ellipticity**2
