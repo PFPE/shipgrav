@@ -1,0 +1,11 @@
+name: test
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - scipy
+  - pandas
+  - statsmodels
+  - tomli
+  - pyyaml
+  - coverage
