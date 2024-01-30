@@ -58,6 +58,7 @@ jobs:
       - name: run test suite
         run: |
           mkdir empty; cd empty
+          cp -r ../shipgrav/tests/ex_files .
           coverage run --include='*/shipgrav/*' -m shipgrav.tests
           coverage xml -o ../coverage.xml
       - name: upload coverage
