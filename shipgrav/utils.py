@@ -158,21 +158,25 @@ def clean_ini_to_toml(ini_file):
 class SnappingCursor:
     """A cross-hair cursor that snaps to the closest *x* point on a line
 
-    This is specifically designed for a two-axis figure where the first axis (ax1) 
-    has the cross-hair cursor, and the second axis (ax2) has a dot that's linked
-    to the lower axis in a way. Basically, we plot two different values for one
+    This is for a two-axis figure where the first axis (ax1) 
+    has a cross-hair cursor, and the second axis (ax2) has a dot that's linked
+    to the cursor in ax1. Basically, we can plot two different values for one
     time series, and use a cursor over one of them to move a dot around on the other one.
 
-    The specific use case here is a plot of FAA vs time (so, x unique and sorted) with 
-    the cursor, and a dot moving around on a map view of a ship track (x not necessarily
-    unique or sorted).
+    The time series with the cross hair cursor must have x values that are unique and sorted.
 
-    The two are linked via the pandas DataFrame "data", and there are hard-coded
-    assumptions about which columns are in the data and whick values are plotted
-    in the two axes.
+    Since this class is designed for a specific use case, there are some hard-coded assumptions
+    about the names of columns in the DataFrame being used for plotting.
+
+    .. The specific use case here is a plot of FAA vs time (so, x unique and sorted) with 
+       the cursor, and a dot moving around on a map view of a ship track (x not necessarily
+       unique or sorted).
+
+    .. The two are linked via the pandas DataFrame "data", which has columns *tsec*,
+       *lon_new*, and *lat_new* 
 
     The cursor can also register mouse clicks so the user can interactively select points
-    on the map that are accessible later.
+    that are accessible later.
 
     For usage, see the example script interactive_line_pick.py included with the
     shipgrav package

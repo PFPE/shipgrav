@@ -8,7 +8,8 @@ def ll2en(lon,lat,freq=1):
     """ Convert time series of geographic position to E/N velocities.
 
     Lon/lat pairs should be at a constant sampling rate. The first and last five 
-    values of the output arrays are filled with Nan.
+    values of the output arrays are filled with Nan because the differencing scheme
+    has some edge effects.
 
     :param lon: np.ndarray of longitude points, decimal degrees
     :param lat: np.ndarray of latitude points, decimal degrees
@@ -46,6 +47,9 @@ def vevn2cv(ve, vn):
     """Calculate velocity and heading from east and north velocities.
 
     Output heading is in degrees clockwise from N.
+
+    :param ve: east velocity
+    :param vn: north velocity
     """
     heading = np.rad2deg(np.arctan2(ve, vn))
     vel = np.sqrt(ve**2 + vn**2)

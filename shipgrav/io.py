@@ -133,7 +133,7 @@ def _clock_time(allnav,talker):
     return hour, mint, sec, msec
 
 def _navdate_Atlantis(allnav, talker):
-    """Extract datetime info from Atlantis nav files (at.*GPS).
+    """Extract datetime info from Atlantis nav files (at*.GPS).
     """
     hour, mint, sec, msec = _clock_time(allnav, talker)
 
@@ -556,7 +556,7 @@ def read_other_stuff(yaml_file,data_file,tag):
     """Read a particular feed (eg, $PASHR) from a data file + yaml file.
 
     This function parses strings for the desired feed and returns info as a 
-    pandas.DatafFame with columns named from the corresponding yaml file.
+    pandas.DataFrame with columns named from the corresponding yaml file.
     If there is a column in the feed strings prior to the tag itself, that 
     will be included as a 'mystery' dataframe column.
 

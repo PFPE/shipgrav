@@ -176,7 +176,8 @@ def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
     """ Full Eotvos correction in mGals
 
     From Harlan 1968, "Eotvos Corrections for Airborne Gravimetry" JGR 73(14)
-    original matlab script written by Sandra Preaux, NGS, NOAA August 24 2009
+
+    Modified from matlab script written by Sandra Preaux, NGS, NOAA August 24 2009
 
     components:
 
@@ -770,7 +771,7 @@ def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
     Downward continuation of gravity to "topographic relief" ie crustal thickness
 
     This can be used in 2D, theoretically, but also works for a single line
-    given ny=1 (which is the default
+    given ny=1 (which is the default)
 
     .. Written by Hannah Mark (MIT/WHOI), October 2017
        Modeled on down_2d.f by Jian Lin (WHOI)
