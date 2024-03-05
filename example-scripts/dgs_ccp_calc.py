@@ -2,27 +2,39 @@ import numpy as np
 import shipgrav.io as sgi
 import shipgrav.grav as sgg
 import shipgrav.nav as sgn
+import tomli as tm
 from scipy.signal import firwin, filtfilt
+import matplotlib.pyplot as plt
 from glob import glob
 import os, sys
 
 ########################################################################
-# Example script using sample data from DGS to illustrate how cross-
+# Example script using data from TN400 to illustrate how cross-
 # coupling coefficients are calculated and applied.
-# DGS provided a set of coefficients for this dataset, and the calculated
-# values are compared to those.
+#
+# Read DGS data files
+    # (not bothering with navigation syncing; see dgs_bgm_comp.py)
+# Calculate FAA
+# Calculate various kinematic parameters
+# Fit for cross-coupling coefficients
+# Correct for cross-coupling
+# Plot with and without corrections
 ########################################################################
 
 # set some general metadata
-ship = 'DGStest'
-cruise = 'DG1'
+ship = 'Thompson'
+cruise = 'TN400'
 sampling = 1
-bias_dgs = 969143
+# read a few constants etc from our toml database file
+with open('../shipgrav/database.toml','rb') as f:
+    info = tm.load(f)
+#nav_tag = info['nav-talkers'][ship]  # could use this for nav file read
+bias_dgs = info['bias-values'][ship]['dgs']
 
 # set up file paths, get lists of input files
 root = 'data/'
 dgs_path = os.path.join(root,ship,cruise,'gravimeter/DGS')
-dgs_files = np.sort(glob(os.path.join(dgs_path,'AT1M*.dat')))
+dgs_files = np.sort(glob(os.path.join(dgs_path,'AT1M*.Raw')))
 
 # read and sort the gravimeter data
 dgs_data = sgi.read_dat_dgs(dgs_files, ship)
@@ -30,6 +42,8 @@ dgs_data.sort_values('date_time',inplace=True)
 dgs_data.reset_index(inplace=True,drop=True)
 dgs_data['tsec'] = [e.timestamp() for e in dgs_data['date_time']]  # get posix timestamps
 dgs_data['grav'] = dgs_data['rgrav'] + bias_dgs
+
+dgs_data = dgs_data.iloc[1000:]  # trim some bits that we happen to know are bad
 
 # calculate corrections for FAA
 ellipsoid_ht = np.zeros(len(dgs_data))  # we are working at sea level
@@ -52,7 +66,6 @@ gps_nacc = 1e5*sampling*np.convolve(gps_vn, sgn.tay10, 'same')
 crse, vel = sgn.vevn2cv(gps_ve, gps_vn)
 crse[np.isnan(crse)] = 0
 vel[np.isnan(vel)] = 0
-# TODO check for "stopped"?
 
 acc_cross, acc_long = sgn.rot_acc_EN_cl(crse, gps_eacc, gps_nacc)  # gps-derived cross and long accel
 
@@ -68,8 +81,6 @@ _, model = sgg.calc_ccp(dgs_data['faa'].values, dgs_data['vcc'].values, dgs_data
 
 print('cross coupling parameters from fit:')
 print('ve %.3f, vcc %.3f, al %.3f, ax %.3f, lev %.3f' % (model.params.ve, model.params.vcc,model.params.al, model.params.ax,model.params.lev))
-print('cross coupling parameters provided by DGS for this data:')
-print('ve %.3f, vcc %.3f, al %.3f, ax %.3f' % (-0.3509, 109., 0.251, 0.23))
 
 # apply cross-coupling correction and plot the (filtered) FAA
 dgs_data['faa_ccp'] = dgs_data['faa'] + model.params.ve*dgs_data['ve'] + \
