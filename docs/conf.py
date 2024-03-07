@@ -50,8 +50,8 @@ html_theme_options = {
     'github_user': 'hfmark',
     'github_repo': 'shipgrav',
     'description': 'Marine gravity processing for UNOLS',
-    'show_powered_by': False,
-    'page_width': '1240px',
+    #'show_powered_by': False,
+    #'page_width': '1240px',
     #'sidebar_width': '220px',
     'extra_nav_links': {'Project on Github': 'https://github.com/hfmark/shipgrav'}
 
