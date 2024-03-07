@@ -2,7 +2,7 @@
 Introduction
 ---------------------
 
-shipgrav is a Python package with utilities for reading and processing marine gravity data from UNOLS ships. At time of writing, the UNOLS fleet is transitioning away from BGM3 gravimeters to DGS AT1M meters managed by the Potential Field Pool Equipment (PFPE) facility. shipgrav is able to read files from both types of meters, as well as navigation data and other vessel feeds.
+shipgrav is a Python package with utilities for reading and processing marine gravity data from UNOLS ships. At time of writing, the UNOLS fleet is transitioning away from BGM3 gravimeters to DGS AT1M meters managed by the Potential Field Pool Equipment (PFPE) facility. shipgrav is able to read files from both types of meters, as well as navigation data and other vessel feeds. shipgrav functions can then be used to process gravity data to FAA, MBA, RMBA, and crustal thickness estimates.
 
 DGS gravimeters output two types of files: serial, or 'raw' files; and 'laptop' files. Raw files are written from the serial port, and contain counts values that can be calibrated to retrieve the gravity signal. In this documentation we use the terms 'serial' and 'raw' interchangeably.  What we refer to as laptop files are lightly processed onboard the meter and output with (biased) gravity values alongside other information.
 
@@ -18,10 +18,9 @@ shipgrav's dependencies are
 * statsmodels
 * tomli
 * pyyaml
+* matplotlib (optional, needed to run some of the example scripts)
 
-matplotlib is also required to run some of the example scripts.
-
-To install and use shipgrav, using an environment managing tool is recommended. An exemplary way to do this using `conda <https://anaconda.org>`_ would be to use these commands: ::
+To install shipgrav, we recommend using an environment management tool like `conda <https://anaconda.org>`_. An exemplary set of commands to make a conda enviroment with shipgrav would be: ::
 
     conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml matplotlib
     conda activate shipgrav
@@ -33,19 +32,19 @@ To install and use shipgrav, using an environment managing tool is recommended. 
 Modules and files
 -----------------
 
-shipgrav consists of the modules ``io``, ``nav``, ``grav``, and ``utils``, along with the file ``database.toml`` and a set of example scripts and data files. 
+shipgrav consists of the modules ``io``, ``nav``, ``grav``, and ``utils``, along with the file ``database.toml`` and a set of example scripts. 
 
 * ``io`` contains functions for reading different kinds of gravimeter files and associated navigation files.
 * ``nav`` contains functions for handling coordinate systems.
 * ``grav`` contains functions for processing gravity data and calculating various anomalies.
 * ``utils`` is a catch-all of other things we need. 
 * ``database.toml`` holds some ship-specific constants and other information for UNOLS vessels.
-* the scripts in ``example-scripts`` walk through the steps of reading and processing UNOLS gravimeter data for a set of sample data files.
+* the scripts in ``example-scripts/`` walk through the steps of reading and processing UNOLS gravimeter data for a set of data files that are publicly available via `R2R (Rolling Deck to Repository) <https://www.rvdata.us>`_.
 
 Data directories
 ----------------
 
-You can organize your data however you like; shipgrav does not care as long as you tell it where to look. However, the example scripts are all set up using a particular organization system that you may like to emulate. You can see this structure in the data files that accompany the example scripts. 
+You can organize your data however you like; shipgrav does not care as long as you tell it where to look. However, to run the example scripts, you will need to download some data and ensure that the scripts are pointed to the paths where you put that data. A shell script is provided in ``example-scripts/`` to help download and organize the data.
 
 Navigation data
 ---------------
@@ -59,13 +58,22 @@ The database file included in shipgrav lists the navigation talkers that we expe
 Example scripts
 ---------------
 
-The scripts in the ``example-scripts`` directory use sample data files to run through some common workflows. The sample data files are not available on github because of file size limits but we're working on making them available for download elsewhere.
+The scripts in the ``example-scripts/`` directory use publicly available data files to run through some common workflows for marine gravity processing. The data files can be downloaded from R2R and Zenodo. The ``download_data.sh`` shell script in ``example-scripts/`` uses ``curl`` and ``tar`` to download all the data files for you and set them up in a directory structure that matches what the examples expect. You can also download and unpack the files on your own from the sources listed below:
+
+* https://doi.org/10.7284/151470 - TN400 BGM3 data
+* https://doi.org/10.7284/151457 - TN400 nav data
+* https://doi.org/10.7284/157179 - SR2312 DGS laptop data
+* https://doi.org/10.7284/157188 - SR2312 nav data
+* https://doi.org/10.7284/157177 - SR2312 mru data
+* [zenodo link tba] - TN400 DGS raw and laptop data, SR2312 DGS raw data, R/V Ride DGS meter and Hydrins metadata, satellite FAA tracks for comparison, example file for RMBA calculation
+
+If you are not using the download script provided, we recommend looking at what it does and mimicking the directory structure it sets up for the data files. Otherwise, you will have to edit the examples to point to the correct filepaths for wherever you put the data in your system.
 
 ``dgs_bgm_comp.py`` reads data from DGS and BGM gravimeter files from R/V Thompson cruise TN400. The files are lightly processed to obtain the FAA (including syncing with navigation data for more accurate locations), and the FAA is plotted alongside corresponding satellite-derived FAA.
 
 ``dgs_raw_comp.py`` reads laptop and serial data from R/V Sally Ride cruise SR2312. The serial data are calibrated and compared to the laptop data. The laptop data are processed to FAA and plotted alongside satellite-derived FAA.
 
-``dgs_ccp_calc.py`` reads an example set of laptop files provided by DGS, calculates the FAA and various kinematic variables, and fits for cross-coupling coefficients. The coefficients derived from the data are compared to values that were provided by DGS. The cross-coupling correction is applied and the data are plotted with and without correction.
+``dgs_ccp_calc.py`` reads DGS files from R/V Thompson cruise TN400, calculates the FAA and various kinematic variables, and fits for cross-coupling coefficients. The cross-coupling correction is applied and the data are plotted with and without correction.
 
 ``mru_coherence.py`` reads laptop data and other feeds from R/V Sally Ride cruise SR2312. The FAA is calculated, and MRU info is read to obtain time series of pitch, roll, and heave. Coherence is caluclated between those and each of the four monitors output by the gravimeter for the cross-coupling correction.
 
@@ -80,9 +88,11 @@ Help!
 
 **Other file reading errors:** shipgrav does its best to read a variety of file formats from UNOLS gravimeters, but we can't read files that we don't know enough about ahead of time. In some cases, a file cannot be read because we don't yet know how to pass the file to the correct parsing function. Most primary i/o functions in shipgrav have an option where users can supply their own file-parsing function, so one option is to write such a function (following the examples in shipgrav for known vessel file formats) and plug that in via the appropriate kwarg (usually named ``ship_function``). You can also send an example file and information to PFPE so that we can update shipgrav.
 
-**The anomaly I've calculated looks really weird:** a good first step is to compare your (lowpass filtered) FAA to satellite data (e.g., Sandwell et al. 2014, doi: 10.1126/science.1258213). If that looks very different, you can start checking whether the data is being read properly; whether the sample rate of the data is consistent with your expectations; whether there are anomalous spikes or dropouts in the data that need to be cleaned out; and whether the corrections used to calculate the FAA seem to have reasonable magnitudes.
+**The anomaly I've calculated looks really weird:** a good first step is to compare your (lowpass filtered) FAA to satellite data (e.g., `Sandwell et al. 2014 <https://doi.org/10.1126/science.1258213>`_). If that looks very different, you can start checking whether the data is being read properly; whether the sample rate of the data is consistent with your expectations; whether there are anomalous spikes or dropouts in the data that need to be cleaned out; and whether the corrections used to calculate the FAA seem to have reasonable magnitudes.
 
-**If you have some other question that's not answered here:** you can try contacting PFPE for specific assistance with processing UNOLS gravimeter data.
+**I'm going to sea and want to be able to access this documentation offline:** this is all auto-generated from text included in the shipgrav source files! So one option is just to go read those (the main part of the documentation is in ``shipgrav/__init__.py``). To view it as a nice webpage, you can build the documentation locally using ``sphinx``. Install ``sphinx`` in your conda environment, run the command ``make html`` in the ``docs/`` directory, and then open ``docs/_build/html/index.html`` in your browser to view the documentation.
+
+**If you have some other question that's not answered here:** you can try contacting PFPE at pfpe-internal(at)whoi.edu for specific assistance with processing UNOLS gravimeter data.
 
 Testing
 -------
@@ -93,6 +103,6 @@ shipgrav comes with a set of unit tests. To run them for yourself, navigate to t
 Contributing
 ------------
 
-Do you have ideas for making this software better? Go ahead and `raise an issue <https://github.com/hfmark/shipgrav/issues>`_ on the github page or, if you're a savvy Python programmer, submit a pull request. You can also email PFPE.
+Do you have ideas for making this software better? Go ahead and `raise an issue <https://github.com/hfmark/shipgrav/issues>`_ on the github page or, if you're a savvy Python programmer, submit a pull request. You can also email PFPE at pfpe-interal(at)whoi.edu.
 
 """

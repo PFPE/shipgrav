@@ -46,6 +46,16 @@ html_sidebars = {
         'searchbox.html',
     ]
 }
+html_theme_options = {
+    'github_user': 'hfmark',
+    'github_repo': 'shipgrav',
+    'description': 'Marine gravity processing for UNOLS',
+    'show_powered_by': False,
+    'page_width': '1240px',
+    #'sidebar_width': '220px',
+    'extra_nav_links': {'Project on Github': 'https://github.com/hfmark/shipgrav'}
+
+}
 
 ## -- Options for LaTeX output -------------------------------------------------
 #latex_additional_files = ['tex/pfpe-manual.cls']

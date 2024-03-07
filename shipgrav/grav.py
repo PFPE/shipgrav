@@ -403,9 +403,8 @@ def center_diff(y,n,samp):
 def up_vecs(dt, g, cacc, lacc, on_off, cper, cdamp, lper, ldamp):
     """ Calculate 3xN matrix of platform up-pointing vectors in (cross, long) coordinates
 
-    the on_off flag is still kind of mysterious to me but if it is
-    0 then things are actually calculated; if >0 then the
-    accelerations get zeroed out
+    The on_off flag can be used to zero out accelerations for times when
+    the meter is clamped or otherwise not operational.
     """
     # clean out any nans in the accelerations
     cacc[np.isnan(cacc)] = 0
