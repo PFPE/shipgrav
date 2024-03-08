@@ -71,15 +71,45 @@ If you are not using the download script provided, we recommend looking at what 
 
 ``dgs_bgm_comp.py`` reads data from DGS and BGM gravimeter files from R/V Thompson cruise TN400. The files are lightly processed to obtain the FAA (including syncing with navigation data for more accurate locations), and the FAA is plotted alongside corresponding satellite-derived FAA.
 
+.. image:: _static/TN400_FAA.png
+   :alt: FAA for TN400 data from BGM3 and DGS, compared to satellite data.
+   :height: 250px
+   :align: center
+
 ``dgs_raw_comp.py`` reads laptop and serial data from R/V Sally Ride cruise SR2312. The serial data are calibrated and compared to the laptop data. The laptop data are processed to FAA and plotted alongside satellite-derived FAA.
+
+.. image:: _static/SR2312_serial_laptop.png
+   :alt: SR2312 raw gravity from serial and laptop files.
+   :height: 250px
+   :align: center
 
 ``dgs_ccp_calc.py`` reads DGS files from R/V Thompson cruise TN400, calculates the FAA and various kinematic variables, and fits for cross-coupling coefficients. The cross-coupling correction is applied and the data are plotted with and without correction.
 
+.. image:: _static/TN400_ccp.png
+   :alt: FAA for TN400, with and without cross-coupling correction applied.
+   :height: 250px
+   :align: center
+
 ``mru_coherence.py`` reads laptop data and other feeds from R/V Sally Ride cruise SR2312. The FAA is calculated, and MRU info is read to obtain time series of pitch, roll, and heave. Coherence is caluclated between those and each of the four monitors output by the gravimeter for the cross-coupling correction.
+
+.. image:: _static/roll_coherence.png
+   :alt: Coherence between monitors and roll for SR2312.
+   :height: 250px
+   :align: center
 
 ``interactive_line_pick.py`` reads laptop data and navigation data from R/V Sally Ride cruise SR2312. The script generates an interactive plot with a cursor for users to select segments of the time series data based on mapped locations, in order to extract straight line segments from a cruise track. The selected segments are written to files that can be re-read by the next script...
 
-``RMBA_calc.py`` reads an example of data from a line segment (from the interactive line picker) and calcualtes the residual mantle bouger anomaly (RMBA) as well as estimated crustal thickness variations.
+.. image:: _static/cursor.png
+   :alt: Interactive line segment picker window.
+   :height: 250px
+   :align: center
+
+``RMBA_calc.py`` reads an example of data from a line segment (from the interactive line picker) and calculates the residual mantle bouger anomaly (RMBA) as well as estimated crustal thickness variations.
+
+.. image:: _static/rmba.png
+   :alt: RMBA for a segment of SR2312, with back-calculated "recovered" signal.
+   :height: 250px
+   :align: center
 
 Help!
 -----
