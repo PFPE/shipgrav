@@ -266,7 +266,7 @@ def fa_2ord(lat,ht):
     """ 2nd order free-air correction
 
     :param lat: latitude, degrees
-    :parma height: elevation, meters
+    :param height: elevation, meters
     """
     s2lat = np.sin(np.deg2rad(lat))**2
 
