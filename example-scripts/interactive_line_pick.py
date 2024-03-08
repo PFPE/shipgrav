@@ -100,7 +100,7 @@ while True:
 
     dot = ax2.plot(dgs_data.iloc[0]['lon_new'],dgs_data.iloc[0]['lat_new'],marker='o',color='k')
 
-    cursor = sgu.SnappingCursor(ax1,ax2,S1[0],dot[0],dgs_data)
+    cursor = sgu._SnappingCursor(ax1,ax2,S1[0],dot[0],dgs_data)
     cid = plt.connect('motion_notify_event',cursor.on_mouse_move)
     cid2 = plt.connect('button_press_event', cursor.on_mouse_click)
 

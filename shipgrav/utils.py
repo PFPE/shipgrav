@@ -155,7 +155,7 @@ def clean_ini_to_toml(ini_file):
     fo.close()
     return
 
-class SnappingCursor:
+class _SnappingCursor:
     """A cross-hair cursor that snaps to the closest *x* point on a line
 
     This is for a two-axis figure where the first axis (ax1) 
