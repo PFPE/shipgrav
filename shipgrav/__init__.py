@@ -46,6 +46,11 @@ Data directories
 
 You can organize your data however you like; shipgrav does not care as long as you tell it where to look. However, to run the example scripts, you will need to download some data and ensure that the scripts are pointed to the paths where you put that data. A shell script is provided in ``example-scripts/`` to help download and organize the data.
 
+Ties and bias
+-------------
+
+The ``databaser.toml`` file contains some bias values for UNOLS vessels. These are provided for your convenience, but are not necessarily up-to-date with recent gravity ties.
+
 Navigation data
 ---------------
 
