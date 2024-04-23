@@ -25,7 +25,7 @@ To install shipgrav, we recommend using an environment management tool like `con
     conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml matplotlib
     conda activate shipgrav
     cd /path/to/put/source/files
-    git clone https://github.com/hfmark/shipgrav.git
+    git clone https://github.com/WHOIGit/shipgrav.git
     cd shipgrav/
     pip install .
 
@@ -138,6 +138,6 @@ shipgrav comes with a set of unit tests. To run them for yourself, navigate to t
 Contributing
 ------------
 
-Do you have ideas for making this software better? Go ahead and `raise an issue <https://github.com/hfmark/shipgrav/issues>`_ on the github page or, if you're a savvy Python programmer, submit a pull request. You can also email PFPE at pfpe-interal(at)whoi.edu.
+Do you have ideas for making this software better? Go ahead and `raise an issue <https://github.com/WHOIGit/shipgrav/issues>`_ on the github page or, if you're a savvy Python programmer, submit a pull request. You can also email PFPE at pfpe-interal(at)whoi.edu.
 
 """
