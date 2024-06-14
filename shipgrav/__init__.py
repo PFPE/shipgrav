@@ -49,7 +49,7 @@ You can organize your data however you like; shipgrav does not care as long as y
 Ties and bias
 -------------
 
-The ``databaser.toml`` file contains some bias values for UNOLS vessels. These are provided for your convenience, but are not necessarily up-to-date with recent gravity ties.
+The ``database.toml`` file contains some bias values for UNOLS vessels. These are provided for your convenience, but are not necessarily up-to-date with recent gravity ties.
 
 Navigation data
 ---------------
