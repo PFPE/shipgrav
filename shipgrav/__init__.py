@@ -63,14 +63,14 @@ The database file included in shipgrav lists the navigation talkers that we expe
 Example scripts
 ---------------
 
-The scripts in the ``example-scripts/`` directory use publicly available data files to run through some common workflows for marine gravity processing. The data files can be downloaded from R2R and Zenodo. The ``download_data.sh`` shell script in ``example-scripts/`` uses ``curl`` and ``tar`` to download all the data files for you and set them up in a directory structure that matches what the examples expect. You can also download and unpack the files on your own from the sources listed below:
+The scripts in the ``example-scripts/`` directory use publicly available data files to run through some common workflows for marine gravity processing. The data files can be downloaded from R2R and Zenodo. The ``download_data.sh`` shell script in ``example-scripts/`` uses ``curl``, ``tar``, and ``unzip`` to download all the data files for you and unpack them into a directory structure that matches what the examples expect. You can also download and unpack the files on your own from the sources listed below:
 
 * https://doi.org/10.7284/151470 - TN400 BGM3 data
 * https://doi.org/10.7284/151457 - TN400 nav data
 * https://doi.org/10.7284/157179 - SR2312 DGS laptop data
 * https://doi.org/10.7284/157188 - SR2312 nav data
 * https://doi.org/10.7284/157177 - SR2312 mru data
-* [zenodo link tba] - TN400 DGS raw and laptop data, SR2312 DGS raw data, R/V Ride DGS meter and Hydrins metadata, satellite FAA tracks for comparison, example file for RMBA calculation
+* https://doi.org/10.5281/zenodo.12733929 - TN400 DGS raw and laptop data, SR2312 DGS raw data, R/V Ride DGS meter and Hydrins metadata, satellite FAA tracks for comparison, example file for RMBA calculation
 
 If you are not using the download script provided, we recommend looking at what it does and mimicking the directory structure it sets up for the data files. Otherwise, you will have to edit the examples to point to the correct filepaths for wherever you put the data in your system.
 

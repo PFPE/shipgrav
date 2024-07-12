@@ -27,11 +27,16 @@ mkdir -p data/Thompson/TN400/NAV
 mkdir -p data/Thompson/TN400/gravimeter/DGS/serial
 mkdir -p data/Thompson/TN400/gravimeter/BGM3/serial
 
-# set up temp dir for downloading things and unpacking, move over there
+# download zenodo repo, unpack
+# since archive file structure follows what we're using, can just unpack and it will populate
+curl -X GET https://zenodo.org/api/records/12733929/files/data.zip/content --output zenodo.zip
+unzip zenodo.zip
+# clean up
+rm zenodo.zip
+
+# set up temp dir for downloading other things and unpacking, move over there
 mkdir -p temp
 cd temp
-
-# TODO download zenodo repo, unpack
 
 # TN400 data: BGM3 and nav
 # https://doi.org/10.7284/151470 (grav)
