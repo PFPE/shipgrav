@@ -573,6 +573,188 @@ def grav1d_padded(xtopo,topo,zlev,rho):
 
     return anom
 
+def grav2d_folding(X,Y,Z,dx,dy,drho=0.6,dz=6000,ifold=1,npower=5):
+    """
+    Parker [1972] method for calculating gravity from 2D topographic surface with a density contrast.
+
+    .. Modified from parker.m by Mark Behn, which was in turn modified from
+       parker.f by Ban-Yuan Kuo and Jian Lin.
+
+    :param X: vector of X coords
+    :param Y: vector of Y coords
+    :param Z: matrix of Z coords
+    :param dx: grid spacing, for wavenumbers [km]
+    :param dy: grid spacing, for wavenumbers [km]
+    :param drho: density contrast across surface. Ex: 1.7 for water to crust, 0.6 for crust to mantle
+    :param dz: offset depth for layer interface, added to baselevel for upward continuation [m]
+    :param ifold: folding. 1=fold, else=don't fold (default: 1)
+    :param npower: power of Taylor series expansion (default: 5)
+
+    :returns: summed gravity anomaly in mgal
+    """
+    nx = len(X)  # size of the grid
+    ny = len(Y)
+
+    zmax = max(Z.flatten())   # get min and max for scaling
+    zmin = min(Z.flatten())
+    if zmax < -1e10:
+        zmax = -1e10
+    if zmin > 1e10:
+        zmin = 1e10
+
+    slev = np.mean(Z.flatten())
+
+    Z = 100*(slev-Z)
+    slev = slev*100
+    dx = 100000*dx
+    dy = 100000*dy
+    dz = dz*100
+
+    # to fold or not to fold--
+    if ifold == 1:
+        nxt = nx*2
+        nyt = ny*2
+    else:
+        nxt = nx
+        nyt = ny
+
+    G = 6.673e-8   # gravitational constant
+    conv = 1000  # gals to mgals
+    grav1 = 2*np.pi*G*conv
+
+    grav = grav1*drho
+
+    # for wavenumbers
+    kint1 = (2*np.pi)/(nxt*dx)
+    kint2 = (2*np.pi)/(nyt*dy)
+    kx2 = kint1*kint1
+    ky2 = kint2*kint2
+
+    # folding frequency:
+    mfx = int(nxt/2 + 1)
+    mfy = int(nyt/2 + 1)
+    mfx2 = mfx*2
+    mfy2 = mfy*2
+
+    # the important part:
+        # (1) compute wavenumbers
+        # (2) transform topography with fft
+        # (3) sum over powers with those wavenumbers
+        # (4) upward continue, transform back to space domain, multiply
+        #     by constants
+
+    # wavenumbers:
+    yj1 = np.arange(1,mfy+1)
+    yj = np.append(yj1,yj1[mfy-2:0:-1])
+    yyk = (yj-1)*(yj-1)*ky2
+
+    xi1 = np.arange(1,mfx+1)
+    xi = np.append(xi1,xi1[mfx-2:0:-1])
+    xxk = (xi-1)*(xi-1)*kx2
+
+    kwn1 = np.zeros((nxt,nyt))
+    for j in range(nyt):
+        kwn1[:,j] = np.sqrt(xxk + yyk[j])
+
+    kwn1 = kwn1.T
+
+    # fold the data
+    if ifold == 1:
+        Z = np.vstack((Z,np.flipud(Z)))  # fold in X
+        Z = np.hstack((Z,np.fliplr(Z)))  # fold in Y
+
+    # first power
+    data = np.copy(Z)
+    data = np.fft.fft2(data)
+    data[0,0] = 0
+
+    # sum over the other powers
+    csum = np.copy(data)  # for adding summation terms
+    fact = 1
+    for i in range(2,npower+1):
+        fact = fact*i
+        data = np.copy(Z)**i
+        data = np.fft.fft2(data)
+
+        data = data*(kwn1**(i-1))/fact
+        k,l = np.where(kwn1 == 0)
+        data[k,l] = 0
+
+        csum = csum + np.copy(data)
+
+    # upward continuation
+    zlev = slev+dz
+    data = csum*grav*np.exp(-zlev*kwn1)
+
+    data = np.fft.ifft2(data)
+    sdata = np.real(data[:ny,:nx])  # back in the spatial domain
+
+    return sdata
+
+def glayer(rho,dx,dy,z1,z2):
+    """
+    Calculate the gravity contribution from a layer of equal thickness with
+    an inhomogenous density distribution in x and y (homogeneous in z)
+
+    .. Based on glayer.m by Mark Behn
+
+    :param rho: 2D density distribution [kg/m^3]
+    :param dx,dy: sample intervals in km
+    :param z1,z2: depth to top and bottom of layer in km (both >0)
+
+    :returns: gravity, probably in mgal
+    """
+
+    si2mg = 1e5
+    km2m = 1e3
+    G = 6.673e-11
+    grav = 2*np.pi*G
+
+    ny,nx = rho.shape
+    dkx = 2*np.pi/(nx*dx)
+    dky = 2*np.pi/(ny*dy)
+
+    ifrho = np.fft.fft2(rho)  # take 2D fft of densities
+
+    crho = np.empty((ny,nx),dtype=complex)
+    for j in range(nx):
+        for i in range(ny):
+            kx,ky = _kvalue(i,j,nx,ny,dkx,dky)
+            k = np.sqrt(kx**2 + ky**2)
+            if k == 0:
+                crho[i,j] = 0
+            else:
+                crho[i,j] = ifrho[i,j]*grav*(np.exp(-k*z1)-np.exp(-k*z2))/k
+
+    grho = np.fft.ifft2(crho)
+    grho = np.real(grho)*si2mg*km2m
+
+    return grho
+
+def _kvalue(i,j,nx,ny,dkx,dky):
+    """
+    Get wavenumber coordinates of one element of a rectangular grid
+
+    inputs:
+    :param i,j: indices in ky,kx directions
+    :param nx,ny: dimensions of the grid in the ky,kx directions
+    :param dkx,dky: sample intervals in kx,ky directions
+    """
+
+    nyqx = nx/2+1
+    nyqy = ny/2+1
+
+    if j <= nyqx:
+        kx = (j)*dkx
+    else:
+        kx = (j-nx)*dkx
+
+    if i <= nyqy:
+        ky = (i)*dky
+    else:
+        ky = (i-ny)*dky
+    return kx,ky
+
 def therm_halfspace(x,z,u=0.01,Tm=1350,time=False,rhom=3300,rhow=1000,\
                     a=3.e-5,k=1.e-6):
     """Calculate thermal structure for a half space model.
