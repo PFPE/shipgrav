@@ -171,9 +171,9 @@ rho = np.append(rho,rhos)
 drho = np.diff(rho)
 dz_c = 6000
 
-anom_w = sgg.grav2d_long(xobs,dep_int,0,drho[0])  # topography
-anom_s = sgg.grav2d_long(xobs,dep_int-sed_int,0,drho[1])  # sediment
-anom_c = sgg.grav2d_long(xobs,dep_int-sed_int-dz_c,0,drho[2])  # crust
+anom_w = sgg.grav1d_padded(xobs,dep_int,0,drho[0])  # topography
+anom_s = sgg.grav1d_padded(xobs,dep_int-sed_int,0,drho[1])  # sediment
+anom_c = sgg.grav1d_padded(xobs,dep_int-sed_int-dz_c,0,drho[2])  # crust
 
 MBA = FAA_int - anom_w - anom_s - anom_c  # mantle Bouger anomaly
 
@@ -181,7 +181,7 @@ MBA = FAA_int - anom_w - anom_s - anom_c  # mantle Bouger anomaly
 corrs = np.zeros((len(temps)-1,len(xobs)))  # calculate gravity due to temps
 for i in range(len(temps)-1):  # loop over a set of isotherms defined above
     ziso,_ = sgg.therm_Z(age_int,temps[i],time=True,Tm=Tm,a=a)
-    corrs[i,:] = sgg.grav2d_long(xobs,dep_int-sed_int-ziso-dz_c,0,drho[i+3])
+    corrs[i,:] = sgg.grav1d_padded(xobs,dep_int-sed_int-ziso-dz_c,0,drho[i+3])
 
 RMBA = MBA - np.sum(corrs,axis=0)  # RMBA is MBA minus summed thermal correction
 

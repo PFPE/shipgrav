@@ -511,8 +511,8 @@ def _calc_up_vecs(ctilt,ltilt):
 # MBA and RMBA functions (including thermal models)
 ########################################################################
 
-def grav2d_long(xtopo,topo,zlev,rho):
-    """Calculate the gravity anomaly due to a 2D topographic surface with a density contrast.
+def grav1d_padded(xtopo,topo,zlev,rho):
+    """Calculate the gravity anomaly due to adensity contrast across topography, along a line.
      
     This function uses the method from Parker and Blakely:
 
@@ -522,8 +522,8 @@ def grav2d_long(xtopo,topo,zlev,rho):
         R. J. Blakely (1995). "Ch. 11: Fourier-Domain Modeling" in **Potential Theory in Gravity 
         and Magnetic Applications**, Cambridge University Press, DOI: 10.1017/CBO9780511549816
 
-    .. Original function written by Mark Behn, November 6, 2003
-       Translated to Python and expanded laterally by Hannah Mark, 6 October 2017
+    .. Original 2D function written by Mark Behn, November 6, 2003
+       Translated to Python in 1D with padding by Hannah Mark, 6 October 2017
 
     :param xtopo: x coordinates of the surface in meters (must be equally spaced)
     :param topo: z coordinates of the surface in meters.
@@ -777,9 +777,9 @@ def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
 
     :param ur: residual gravity anomaly, mgal
     :param nx: number of points in x direction, default 1000
-    :param ny: number of points in y direction, default 1 (2D)
+    :param ny: number of points in y direction, default 1 (>1 for 2D)
     :param dx: spacing between x points, km, default 1.3
-    :param dy: spacing between x points, km, default 0 (2D)
+    :param dy: spacing between y points, km, default 0 (>0 for 2D)
     :param zdown: downward continuation depth, km, default 10
     :param rho: density difference crust to mantle, g/cm^3, default 0.4
     :param wlarge: max wavelength for taper/cutoff, km, default 45
