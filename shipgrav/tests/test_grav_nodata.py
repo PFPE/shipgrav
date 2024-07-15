@@ -7,9 +7,9 @@ import shipgrav.grav as sgg
 
 
 class gravNoDataTestCase(unittest.TestCase):
-    def test_grav2d(self):
+    def test_grav1d(self):
         # arbitrary numbers here, not real
-        test_grav = sgg.grav2d_long(np.linspace(
+        test_grav = sgg.grav1d_padded(np.linspace(
             0, 100, 10), np.linspace(10, 15, 10), 1, 0.4)
         self.assertTrue(test_grav[1] - 0.000157 < 0.001)
 
