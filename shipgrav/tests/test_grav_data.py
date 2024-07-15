@@ -35,13 +35,15 @@ class gravDataTestCase(unittest.TestCase):
         self.assertTrue(eotvos[0] + 56.90367 < 0.001)
 
     def test_fa2ord(self):
-        fa2 = sgg.free_air_second_order(self.data['lat'], np.zeros(len(self.data)))
+        fa2 = sgg.free_air_second_order(
+            self.data['lat'], np.zeros(len(self.data)))
         self.assertEqual(fa2.iloc[0], 0.)
 
     def test_up_vecs(self):
         lat_corr = sgg.wgs_grav(self.data['lat']) + sgg.free_air_second_order(self.data['lat'],
-                                                                np.zeros(len(self.data)))
-        ve, vn = sgn.latlon_to_EN(self.data['lon'].values, self.data['lat'].values)
+                                                                              np.zeros(len(self.data)))
+        ve, vn = sgn.latlon_to_EN(
+            self.data['lon'].values, self.data['lat'].values)
         eacc = 1e5*np.convolve(ve, sgn.tay10, 'same')
         nacc = 1e5*np.convolve(vn, sgn.tay10, 'same')
         crse, vel = sgn.ENvel_to_course_heading(ve, vn)
@@ -57,10 +59,10 @@ class gravDataTestCase(unittest.TestCase):
         eotvos = sgg.eotvos_full(self.data['lon'].values, self.data['lat'].values,
                                  np.zeros(len(self.data)), 1)
         lat_corr = sgg.wgs_grav(self.data['lat']) + sgg.free_air_second_order(self.data['lat'],
-                                                                np.zeros(len(self.data)))
+                                                                              np.zeros(len(self.data)))
         faa = self.data['grav'] - lat_corr + eotvos + lt
         _, model = sgg.calc_cross_coupling_coefficients(faa, self.data['vcc'].values, self.data['ve'].values,
-                                self.data['al'].values, self.data['ax'].values, np.zeros(len(self.data)))
+                                                        self.data['al'].values, self.data['ax'].values, np.zeros(len(self.data)))
         self.assertTrue(model.params.ax + 3.428237 < 0.0001)
         self.assertTrue(model.params.ve - 0.055732 < 0.0001)
 

@@ -189,7 +189,8 @@ def _navdate_NBP(allnav, talker):
         year = '20' + date[0]
         doy = date[1]  # doy
         timest[i] = datetime.strptime('%s-%s-%02d:%02d:%02d:%06d' %
-                                      (year, doy, hour[i], mint[i], sec[i], msec[i]), 
+                                      (year, doy, hour[i],
+                                       mint[i], sec[i], msec[i]),
                                       '%Y-%j-%H:%M:%S:%f')
         timest[i] = timest[i].replace(tzinfo=timezone.utc)
     return timest
@@ -514,7 +515,7 @@ def _dgs_laptop_general(path):
     """Read single laptop file for Atlantis, Revelle, NBP, and Ride.
     """
     dat = pd.read_csv(path, delimiter=',', names=['rgrav', 'long_a', 'crss_a', 'status', 've', 'vcc',
-                                                  'al', 'ax', 'lat', 'lon', 'year', 'month', 'day', 
+                                                  'al', 'ax', 'lat', 'lon', 'year', 'month', 'day',
                                                   'hour', 'minute', 'second'],
                       usecols=(1, 2, 3, 6, 10, 11, 12, 13, 14, 15, 19, 20, 21, 22, 23, 24))
     dat['date_time'] = pd.to_datetime(
@@ -526,7 +527,7 @@ def _dgs_laptop_Thompson(path):
     """Read single laptop file for Thompson, which does things its own way.
     """
     dat = pd.read_csv(path, delimiter=',', names=['date', 'time', 'rgrav', 've', 'vcc',
-                                                  'al', 'ax', 'lat', 'lon'], 
+                                                  'al', 'ax', 'lat', 'lon'],
                       usecols=(0, 1, 3, 12, 13, 14, 15, 16, 17),
                       parse_dates=[[0, 1]])
     ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
@@ -570,7 +571,7 @@ def _dgs_raw_general(path):
     """Read a DGS raw (serial) file assuming fields are as DGS says they are.
     """
     dat = pd.read_csv(path, delimiter=',', names=['string', 'Gravity', 'Long', 'Cross', 'Beam', 'Temp',
-                                                  'Pressure', 'ElecTemp', 'vcc', 've', 'al', 'ax', 
+                                                  'Pressure', 'ElecTemp', 'vcc', 've', 'al', 'ax',
                                                   'status', 'checksum', 'latitude',
                                                   'longitude', 'speed', 'course', 'timestamp'],
                       usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18))
@@ -606,7 +607,7 @@ def _dgs_raw_Thompson(path):
     other ships does not work properly.
     """
     dat = pd.read_csv(path, delimiter=',', names=['date', 'time', 'string', 'Gravity', 'Long', 'Cross',
-                                                  'Beam', 'Temp', 'Pressure', 'ElecTemp', 'vcc', 've', 
+                                                  'Beam', 'Temp', 'Pressure', 'ElecTemp', 'vcc', 've',
                                                   'al', 'ax', 'status', 'checksum',
                                                   'latitude', 'longitude', 'speed', 'course'],
                       usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19))

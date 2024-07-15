@@ -125,7 +125,7 @@ def longman_tide_prediction(lon, lat, times, alt=0, return_components=False):
     sigma = s - xi
     # longitude of moon in its orbit reckoned from its ascending intersection with the equator
     L_moon = (sigma + 2*e*np.sin(s - p) + (5./4)*e*e*np.sin(2*(s - p)) +
-         (15./4)*m*e*np.sin(s - 2*h + p) + (11./8)*m*m*np.sin(2*(s - h)))
+              (15./4)*m*e*np.sin(s - 2*h + p) + (11./8)*m*m*np.sin(2*(s - h)))
 
     # Solar calculations
     #  mean longitude of solar perigee
@@ -139,7 +139,7 @@ def longman_tide_prediction(lon, lat, times, alt=0, return_components=False):
     L_sun = h + 2*e1*np.sin(h - p1)
     # cosine(theta) where theta is the zenith angle of the moon
     cos_theta = (np.sin(lamb)*np.sin(I)*np.sin(L_moon) + np.cos(lamb)*(np.cos(0.5*I)**2
-                                                                  * np.cos(L_moon - chi) + np.sin(0.5*I)**2*np.cos(L_moon + chi)))
+                                                                       * np.cos(L_moon - chi) + np.sin(0.5*I)**2*np.cos(L_moon + chi)))
     # cosine(phi) where phi is the zenith angle of the sun
     cos_phi = (np.sin(lamb)*np.sin(omega)*np.sin(L_sun) + np.cos(lamb) *
                (np.cos(0.5*omega)**2*np.cos(L_sun - chi1) +
@@ -838,7 +838,7 @@ def therm_halfspace(x, z, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
 
 
 def therm_Z_halfspace(x, T, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
-            a=3.e-5, k=1.e-6):
+                      a=3.e-5, k=1.e-6):
     """Calculate depth to an isotherm for a half-space cooling model.
 
     :param x: vector of across-axis distance [m] OR plate age [Myr]
@@ -944,8 +944,8 @@ def therm_plate(x, z, u=0.01, zL0=100.e3, Tm=1350, time=False, rhom=3300, rhow=1
 
 
 def therm_Z_plate(x, T, u=0.01, zL0=100.e3, Tm=1350, time=False,
-                         minz=0, maxz=100e3, zsp=1e2, rhom=3300, rhow=1000,
-                         a=3.e-5, k=1.e-6):
+                  minz=0, maxz=100e3, zsp=1e2, rhom=3300, rhow=1000,
+                  a=3.e-5, k=1.e-6):
     """Calculate approximate depth to an isotherm in the plate cooling model
 
     This is done by calculating a temperature field with a decent z spacing 

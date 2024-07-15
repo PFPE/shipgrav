@@ -62,7 +62,8 @@ dgs_data['full_field'] = dgs_data['grav'] + eotvos_corr + tide_corr
 
 # calculate kinematic variables and corrections for tilt correction
 # (maybe not strictly necessary? depends who you ask)
-gps_vn, gps_ve = sgn.latlon_to_EN(dgs_data['lon'].values, dgs_data['lat'].values)
+gps_vn, gps_ve = sgn.latlon_to_EN(
+    dgs_data['lon'].values, dgs_data['lat'].values)
 gps_vn = sampling*gps_vn
 gps_ve = sampling*gps_ve
 
@@ -86,7 +87,7 @@ level_error = lat_corr - igf_in_plat - long_in_plat + cross_in_plat
 
 # calculate cross-coupling coefficients
 _, model = sgg.calc_cross_coupling_coefficients(dgs_data['faa'].values, dgs_data['vcc'].values, dgs_data['ve'].values,
-                        dgs_data['al'].values, dgs_data['ax'].values, level_error.values)
+                                                dgs_data['al'].values, dgs_data['ax'].values, level_error.values)
 
 print('cross coupling parameters from fit:')
 print('ve %.3f, vcc %.3f, al %.3f, ax %.3f, lev %.3f' % (model.params.ve,
