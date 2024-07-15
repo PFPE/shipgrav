@@ -36,7 +36,7 @@ def _convert_datetime_tidetime(timestamp):
     return julian_century, julian_hour
 
 
-def longman_tide_pred(lon, lat, times, alt=0, return_components=False):
+def longman_tide_prediction(lon, lat, times, alt=0, return_components=False):
     """ Calculate predicted tidal effect on gravity using the Longman algorithm.
 
     The calculation is taken directly from
@@ -124,7 +124,7 @@ def longman_tide_pred(lon, lat, times, alt=0, return_components=False):
     # mean longitude of moon in radians in its orbit reckoned from A
     sigma = s - xi
     # longitude of moon in its orbit reckoned from its ascending intersection with the equator
-    L = (sigma + 2*e*np.sin(s - p) + (5./4)*e*e*np.sin(2*(s - p)) +
+    L_moon = (sigma + 2*e*np.sin(s - p) + (5./4)*e*e*np.sin(2*(s - p)) +
          (15./4)*m*e*np.sin(s - 2*h + p) + (11./8)*m*m*np.sin(2*(s - h)))
 
     # Solar calculations
@@ -136,14 +136,14 @@ def longman_tide_pred(lon, lat, times, alt=0, return_components=False):
     # right ascension of meridian of place of observations reckoned from the vernal equinox
     chi1 = t + h
     # longitude of sun in the ecliptic reckoned from the vernal equinox
-    L1 = h + 2*e1*np.sin(h - p1)
+    L_sun = h + 2*e1*np.sin(h - p1)
     # cosine(theta) where theta is the zenith angle of the moon
-    cos_theta = (np.sin(lamb)*np.sin(I)*np.sin(L) + np.cos(lamb)*(np.cos(0.5*I)**2
-                                                                  * np.cos(L - chi) + np.sin(0.5*I)**2*np.cos(L + chi)))
+    cos_theta = (np.sin(lamb)*np.sin(I)*np.sin(L_moon) + np.cos(lamb)*(np.cos(0.5*I)**2
+                                                                  * np.cos(L_moon - chi) + np.sin(0.5*I)**2*np.cos(L_moon + chi)))
     # cosine(phi) where phi is the zenith angle of the sun
-    cos_phi = (np.sin(lamb)*np.sin(omega)*np.sin(L1) + np.cos(lamb) *
-               (np.cos(0.5*omega)**2*np.cos(L1 - chi1) +
-               np.sin(0.5*omega)**2*np.cos(L1 + chi1)))
+    cos_phi = (np.sin(lamb)*np.sin(omega)*np.sin(L_sun) + np.cos(lamb) *
+               (np.cos(0.5*omega)**2*np.cos(L_sun - chi1) +
+               np.sin(0.5*omega)**2*np.cos(L_sun + chi1)))
 
     # Distance
     # distance parameter, eq. 34 in Longman 1959
@@ -276,7 +276,7 @@ def eotvos_full(lon, lat, ht, samp, a=6378137.0, b=6356752.3142):
 ########################################################################
 
 
-def fa_2ord(lat, ht):
+def free_air_second_order(lat, ht):
     """ 2nd order free-air correction
 
     :param lat: latitude, degrees
@@ -303,8 +303,8 @@ def wgs_grav(lat):
 ########################################################################
 
 
-def calc_ccp(faa_in, vcc_in, ve_in, al_in, ax_in, level_in, times=None, samplerate=1):
-    """ Daniel Aliod's version of calculating cross-coupling coefficients from some data
+def calc_cross_coupling_coefficients(faa_in, vcc_in, ve_in, al_in, ax_in, level_in, times=None, samplerate=1):
+    """ Calculate cross-coupling coefficients from some data via ordinary linear regression
 
     :param faa_in: free air anomaly, filtered
     :param vcc_in: vcc monitor
@@ -540,7 +540,7 @@ def _calc_up_vecs(ctilt, ltilt):
 
 
 def grav1d_padded(xtopo, topo, zlev, rho):
-    """Calculate the gravity anomaly due to adensity contrast across topography, along a line.
+    """Calculate the gravity anomaly due to a density contrast across topography, along a line.
 
     This function uses the method from Parker and Blakely:
 
@@ -722,7 +722,7 @@ def grav2d_folding(X, Y, Z, dx, dy, drho=0.6, dz=6000, ifold=1, npower=5):
     return sdata
 
 
-def glayer(rho, dx, dy, z1, z2):
+def grav2d_layer_variable_density(rho, dx, dy, z1, z2):
     """
     Calculate the gravity contribution from a layer of equal thickness with
     an inhomogenous density distribution in x and y (homogeneous in z)
@@ -837,7 +837,7 @@ def therm_halfspace(x, z, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
     return T, W
 
 
-def therm_Z(x, T, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
+def therm_Z_halfspace(x, T, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
             a=3.e-5, k=1.e-6):
     """Calculate depth to an isotherm for a half-space cooling model.
 
@@ -943,7 +943,7 @@ def therm_plate(x, z, u=0.01, zL0=100.e3, Tm=1350, time=False, rhom=3300, rhow=1
     return T, W
 
 
-def therm_Z_plate_approx(x, T, u=0.01, zL0=100.e3, Tm=1350, time=False,
+def therm_Z_plate(x, T, u=0.01, zL0=100.e3, Tm=1350, time=False,
                          minz=0, maxz=100e3, zsp=1e2, rhom=3300, rhow=1000,
                          a=3.e-5, k=1.e-6):
     """Calculate approximate depth to an isotherm in the plate cooling model

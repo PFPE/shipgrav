@@ -480,7 +480,7 @@ def _despike_bgm_serial(dat, thresh=8000):
 ########################################################################
 
 
-def read_dat_dgs(fp, ship, ship_function=None):
+def read_dgs_laptop(fp, ship, ship_function=None):
     """Read DGS 'laptop' file(s), usually written as .dat files.
 
     :param fp: filepath(s), string or list of strings
@@ -534,7 +534,7 @@ def _dgs_laptop_Thompson(path):
     return dat
 
 
-def read_raw_dgs(fp, ship, scale_ccp=True):
+def read_dgs_raw(fp, ship, scale_ccp=True):
     """Read raw (serial) output files from DGS AT1M.
 
     These will be in AD units mostly.

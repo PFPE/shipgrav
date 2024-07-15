@@ -49,7 +49,7 @@ gps_nav.sort_values('time_sec', inplace=True)
 gps_nav.reset_index(inplace=True, drop=True)
 
 # read and sort the DGS laptop data
-dgs_data = sgi.read_dat_dgs(dgs_files, ship)
+dgs_data = sgi.read_dgs_laptop(dgs_files, ship)
 dgs_data.sort_values('date_time', inplace=True)
 dgs_data.reset_index(inplace=True, drop=True)
 dgs_data['tsec'] = [e.timestamp()
@@ -68,10 +68,10 @@ dgs_data['lat_new'] = gps_lat_int(dgs_data['tsec'].values)
 # calculate corrections for FAA
 ellipsoid_ht = np.zeros(len(dgs_data))  # we are working at sea level
 lat_corr = sgg.wgs_grav(dgs_data['lat_new']) + \
-    sgg.fa_2ord(dgs_data['lat_new'], ellipsoid_ht)
+    sgg.free_air_second_order(dgs_data['lat_new'], ellipsoid_ht)
 eotvos_corr = sgg.eotvos_full(dgs_data['lon_new'].values, dgs_data['lat_new'].values,
                               ellipsoid_ht, sampling)
-tide_corr = sgg.longman_tide_pred(
+tide_corr = sgg.longman_tide_prediction(
     dgs_data['lon_new'], dgs_data['lat_new'], dgs_data['date_time'])
 
 dgs_data['faa'] = dgs_data['grav'] - lat_corr + eotvos_corr + tide_corr

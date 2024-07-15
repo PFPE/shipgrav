@@ -60,7 +60,7 @@ bad_inds = np.where(np.diff(gps_nav['lon']) > 1)[0]
 gps_nav.drop(bad_inds, axis=0, inplace=True)
 
 # read and sort the DGS laptop data
-dgs_data = sgi.read_dat_dgs(dgs_files, ship)
+dgs_data = sgi.read_dgs_laptop(dgs_files, ship)
 dgs_data.sort_values('date_time', inplace=True)
 dgs_data.reset_index(inplace=True, drop=True)
 dgs_data['tsec'] = [e.timestamp()
@@ -88,10 +88,10 @@ bgm_data['lat_new'] = gps_lat_int(bgm_data['tsec'].values)
 for df in [dgs_data, bgm_data]:
     ellipsoid_ht = np.zeros(len(df))  # we are working at sea level
     lat_corr = sgg.wgs_grav(df['lat_new']) + \
-        sgg.fa_2ord(df['lat_new'], ellipsoid_ht)
+        sgg.free_air_second_order(df['lat_new'], ellipsoid_ht)
     eotvos_corr = sgg.eotvos_full(df['lon_new'].values, df['lat_new'].values,
                                   ellipsoid_ht, sampling)
-    tide_corr = sgg.longman_tide_pred(
+    tide_corr = sgg.longman_tide_prediction(
         df['lon_new'], df['lat_new'], df['date_time'])
 
     df['faa'] = df['grav'] - lat_corr + eotvos_corr + tide_corr

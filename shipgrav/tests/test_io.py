@@ -27,13 +27,13 @@ class ioTestCase(unittest.TestCase):
         self.assertEqual(bgm.iloc[0]['rgrav'], 127730.60800402702)
 
     def test_read_dgs_dat(self):
-        dgs = sgi.read_dat_dgs('ex_files/DGStest_laptop.dat', 'DGStest')
+        dgs = sgi.read_dgs_laptop('ex_files/DGStest_laptop.dat', 'DGStest')
         self.assertEqual(dgs.iloc[0]['date_time'].timestamp(), 1562803200.0)
         self.assertEqual(dgs.iloc[0]['ve'], 0.81098)
         self.assertTrue(dgs.iloc[0]['rgrav'] - 12295.691114 < 0.0001)
 
     def test_read_dgs_raw(self):
-        dgs = sgi.read_raw_dgs('ex_files/SR2312_dgs_raw.txt', 'Ride')
+        dgs = sgi.read_dgs_raw('ex_files/SR2312_dgs_raw.txt', 'Ride')
         self.assertEqual(
             dgs.iloc[0]['date_time'].timestamp(), 1686873600.857719)
         self.assertEqual(dgs.iloc[0]['Gravity'], -218747)

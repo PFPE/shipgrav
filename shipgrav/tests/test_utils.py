@@ -18,7 +18,7 @@ class utilsTestCase(unittest.TestCase):
     def test_status_decode(self):
         # make a code, decode it, check a few of the 16 status bits
         stat = 12345
-        decoded = sgu.status_bits(stat)
+        decoded = sgu.decode_dgs_status_bits(stat)
         self.assertEqual(decoded['clamp status'], '0')
         self.assertEqual(decoded['GPSsync'], '0')
         self.assertEqual(decoded['GPStime'], '1')

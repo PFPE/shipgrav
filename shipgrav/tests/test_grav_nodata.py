@@ -19,7 +19,7 @@ class gravNoDataTestCase(unittest.TestCase):
         self.assertTrue(W[0] - 368.3393 < 0.001)
 
     def test_halfspace_Z(self):
-        Z, W = sgg.therm_Z(np.array([20e3]), 135.2263, u=0.02)
+        Z, W = sgg.therm_Z_halfspace(np.array([20e3]), 135.2263, u=0.02)
         self.assertTrue(Z[0] - 1e3 < 0.001)
         self.assertTrue(W[0] - 368.3393 < 0.001)
 
@@ -29,7 +29,7 @@ class gravNoDataTestCase(unittest.TestCase):
         self.assertTrue(W[0] - 381.6513 < 0.001)
 
     def test_plate_Z(self):
-        Z = sgg.therm_Z_plate_approx(
+        Z = sgg.therm_Z_plate(
             np.array([20e3]), np.array([134.0867]), u=0.02)
         self.assertEqual(Z[0], 1000.)
 

@@ -192,7 +192,7 @@ MBA = FAA_int - anom_w - anom_s - anom_c  # mantle Bouger anomaly
 # correct for plate cooling (RMBA)
 corrs = np.zeros((len(temps)-1, len(xobs)))  # calculate gravity due to temps
 for i in range(len(temps)-1):  # loop over a set of isotherms defined above
-    ziso, _ = sgg.therm_Z(age_int, temps[i], time=True, Tm=Tm, a=a)
+    ziso, _ = sgg.therm_Z_halfspace(age_int, temps[i], time=True, Tm=Tm, a=a)
     corrs[i, :] = sgg.grav1d_padded(
         xobs, dep_int-sed_int-ziso-dz_c, 0, drho[i+3])
 

@@ -5,7 +5,7 @@ tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6,
          0, -5/6, 5/21, -5/84, 5/504, -1/1260]
 
 
-def ll2en(lon, lat, freq=1):
+def latlon_to_EN(lon, lat, freq=1):
     """ Convert time series of geographic position to E/N velocities.
 
     Lon/lat pairs should be at a constant sampling rate. The first and last five 
@@ -47,7 +47,7 @@ def ll2en(lon, lat, freq=1):
     return vn, ve
 
 
-def vevn2cv(ve, vn):
+def ENvel_to_course_heading(ve, vn):
     """Calculate velocity and heading from east and north velocities.
 
     Output heading is in degrees clockwise from N.
@@ -60,7 +60,7 @@ def vevn2cv(ve, vn):
     return heading, vel
 
 
-def rot_acc_EN_cl(heading, accE, accN):
+def rotate_acceleration_EN_to_cl(heading, accE, accN):
     """Rotate acceleration from East/North to Cross/Long reference frame.
 
     :param heading: heading, in degrees clockwise from N

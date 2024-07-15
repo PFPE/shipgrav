@@ -64,7 +64,7 @@ def _gaussian_coeffs(fl):
     return gauss_prms
 
 
-def status_bits(stat, key='status'):
+def decode_dgs_status_bits(stat, key='status'):
     """ Decode status bits from integers in DGS gravimeter files.
 
     Return flags as a dict (for one integer input) or a dataframe (status df input)

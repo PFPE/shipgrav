@@ -38,7 +38,7 @@ dgs_path = os.path.join(root, ship, cruise, 'gravimeter/DGS')
 dgs_files = np.sort(glob(os.path.join(dgs_path, 'AT1M*.Raw')))
 
 # read and sort the gravimeter data
-dgs_data = sgi.read_dat_dgs(dgs_files, ship)
+dgs_data = sgi.read_dgs_laptop(dgs_files, ship)
 dgs_data.sort_values('date_time', inplace=True)
 dgs_data.reset_index(inplace=True, drop=True)
 dgs_data['tsec'] = [e.timestamp()
@@ -51,10 +51,10 @@ dgs_data = dgs_data.iloc[1000:]
 # calculate corrections for FAA
 ellipsoid_ht = np.zeros(len(dgs_data))  # we are working at sea level
 lat_corr = sgg.wgs_grav(dgs_data['lat']) + \
-    sgg.fa_2ord(dgs_data['lat'], ellipsoid_ht)
+    sgg.free_air_second_order(dgs_data['lat'], ellipsoid_ht)
 eotvos_corr = sgg.eotvos_full(dgs_data['lon'].values, dgs_data['lat'].values,
                               ellipsoid_ht, sampling)
-tide_corr = sgg.longman_tide_pred(
+tide_corr = sgg.longman_tide_prediction(
     dgs_data['lon'], dgs_data['lat'], dgs_data['date_time'])
 
 dgs_data['faa'] = dgs_data['grav'] - lat_corr + eotvos_corr + tide_corr
@@ -62,18 +62,18 @@ dgs_data['full_field'] = dgs_data['grav'] + eotvos_corr + tide_corr
 
 # calculate kinematic variables and corrections for tilt correction
 # (maybe not strictly necessary? depends who you ask)
-gps_vn, gps_ve = sgn.ll2en(dgs_data['lon'].values, dgs_data['lat'].values)
+gps_vn, gps_ve = sgn.latlon_to_EN(dgs_data['lon'].values, dgs_data['lat'].values)
 gps_vn = sampling*gps_vn
 gps_ve = sampling*gps_ve
 
 gps_eacc = 1e5*sampling*np.convolve(gps_ve, sgn.tay10, 'same')
 gps_nacc = 1e5*sampling*np.convolve(gps_vn, sgn.tay10, 'same')
 
-crse, vel = sgn.vevn2cv(gps_ve, gps_vn)
+crse, vel = sgn.ENvel_to_course_heading(gps_ve, gps_vn)
 crse[np.isnan(crse)] = 0
 vel[np.isnan(vel)] = 0
 
-acc_cross, acc_long = sgn.rot_acc_EN_cl(
+acc_cross, acc_long = sgn.rotate_acceleration_EN_to_cl(
     crse, gps_eacc, gps_nacc)  # gps-derived cross and long accel
 
 # tilt correction
@@ -85,7 +85,7 @@ long_in_plat = acc_long*up_vecs[0, :]
 level_error = lat_corr - igf_in_plat - long_in_plat + cross_in_plat
 
 # calculate cross-coupling coefficients
-_, model = sgg.calc_ccp(dgs_data['faa'].values, dgs_data['vcc'].values, dgs_data['ve'].values,
+_, model = sgg.calc_cross_coupling_coefficients(dgs_data['faa'].values, dgs_data['vcc'].values, dgs_data['ve'].values,
                         dgs_data['al'].values, dgs_data['ax'].values, level_error.values)
 
 print('cross coupling parameters from fit:')
