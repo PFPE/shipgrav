@@ -3,7 +3,8 @@ import pandas as pd
 from datetime import datetime, timezone
 import yaml
 import mmap
-import sys, os
+import sys
+import os
 import re
 
 # TODO need a fix for places where we cross the international date line (read_nav)
@@ -13,6 +14,7 @@ import re
 ########################################################################
 # navigation i/o (for better synchronization of gps with gravimeter)
 ########################################################################
+
 
 def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
     """ Read navigation strings from .GPS (or similar) files.
@@ -37,7 +39,7 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
     # read info on talkers for various ships
     moddir = os.path.dirname(__file__)
     import tomli as tm
-    with open(os.path.join(moddir,'database.toml'),'rb') as f:
+    with open(os.path.join(moddir, 'database.toml'), 'rb') as f:
         info = tm.load(f)
     nav_str = info['nav-talkers']
 
@@ -57,12 +59,15 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
             talker = nav_str[ship]
 
     if type(pathlist) == str:
-        pathlist = [pathlist,]  # if just one path is given, make it into a list
+        # if just one path is given, make it into a list
+        pathlist = [pathlist,]
 
-    timetime = np.array([]); lonlon = np.array([]); latlat = np.array([])
+    timetime = np.array([])
+    lonlon = np.array([])
+    latlat = np.array([])
 
     for fpath in pathlist:  # loop nav files (may be a lot of them)
-        with open(fpath,'r') as f:
+        with open(fpath, 'r') as f:
             allnav = np.array(f.readlines())  # read the entire file
 
         if ship_function:  # use a user-supplied function to get all the things
@@ -84,53 +89,65 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
                 lon, lat = _navcoords(allnav, talker)
                 timest = _navdate_Ride(allnav, talker)
             else:  # in theory we never get to this option, but catch just in case
-                print('R/V %s not yet supported for nav read; must supply read function' % ship)
+                print(
+                    'R/V %s not yet supported for nav read; must supply read function' % ship)
                 return -999
 
-        sec_time = np.array([d.timestamp() for d in timest])  # posix, seconds, for interpolation
-        _, idx = np.unique(sec_time,return_index=True)
-        samp_time = np.arange(min(sec_time),max(sec_time),sampling)  # fenceposting?
+        # posix, seconds, for interpolation
+        sec_time = np.array([d.timestamp() for d in timest])
+        _, idx = np.unique(sec_time, return_index=True)
+        samp_time = np.arange(min(sec_time), max(
+            sec_time), sampling)  # fenceposting?
 
-        lon_out = np.interp(sec_time,sec_time[idx],lon[idx])  # interpolate to desired sample rate
-        lat_out = np.interp(sec_time,sec_time[idx],lat[idx])
+        # interpolate to desired sample rate
+        lon_out = np.interp(sec_time, sec_time[idx], lon[idx])
+        lat_out = np.interp(sec_time, sec_time[idx], lat[idx])
 
-        timetime = np.append(timetime,sec_time)
-        lonlon = np.append(lonlon,lon_out)
-        latlat = np.append(latlat,lat_out)
+        timetime = np.append(timetime, sec_time)
+        lonlon = np.append(lonlon, lon_out)
+        latlat = np.append(latlat, lat_out)
 
     # de-duplicate times just in case, and make into a DataFrame to return
     _, idx = np.unique(timetime, return_index=True)
-    gps_nav = pd.DataFrame({'time_sec':timetime[idx],'lon':lonlon[idx],'lat':latlat[idx]})
-    gps_nav['stamps'] = np.array([datetime.fromtimestamp(e,timezone.utc) for e in timetime[idx]],
-                        dtype=datetime)
+    gps_nav = pd.DataFrame(
+        {'time_sec': timetime[idx], 'lon': lonlon[idx], 'lat': latlat[idx]})
+    gps_nav['stamps'] = np.array([datetime.fromtimestamp(e, timezone.utc) for e in timetime[idx]],
+                                 dtype=datetime)
 
     # check if we have probable longitude jumps, try to fix them
     ilocs = np.where(abs(np.diff(gps_nav['lon'])) > 1)[0]
     if len(ilocs) > 0:
-        gps_nav = _clean_180cross(gps_nav)  # try to get rid of +- jumps (NBP, often)
+        # try to get rid of +- jumps (NBP, often)
+        gps_nav = _clean_180cross(gps_nav)
 
     return gps_nav
 
-def _clock_time(allnav,talker):
+
+def _clock_time(allnav, talker):
     """Extract clock time from standard talker strings.
     """
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
-    inav = np.where(inav)[0]  # indices in allnav of the lines that are selected
+    # indices in allnav of the lines that are selected
+    inav = np.where(inav)[0]
     N = len(subnav)
-    hour = np.zeros(N,dtype=int); mint = np.zeros(N,dtype=int)
-    sec = np.zeros(N,dtype=int); msec = np.zeros(N,dtype=int)
-    
+    hour = np.zeros(N, dtype=int)
+    mint = np.zeros(N, dtype=int)
+    sec = np.zeros(N, dtype=int)
+    msec = np.zeros(N, dtype=int)
+
     for i in range(N):
         post = subnav[i].split(talker)[-1].lstrip().split(',')
-        if post[0] == '': post = post[1:]
+        if post[0] == '':
+            post = post[1:]
         hour[i] = int(post[0][:2])   # hour
         mint[i] = int(post[0][2:4])  # min
         sec0 = float(post[0][4:])  # sec.msec
-        msec[i] = int(int(str(sec0).split('.')[-1])*1e4) # msec
-        sec[i] = int(str(sec0).split('.')[0]) # sec
+        msec[i] = int(int(str(sec0).split('.')[-1])*1e4)  # msec
+        sec[i] = int(str(sec0).split('.')[0])  # sec
 
     return hour, mint, sec, msec
+
 
 def _navdate_Atlantis(allnav, talker):
     """Extract datetime info from Atlantis nav files (at*.GPS).
@@ -140,16 +157,19 @@ def _navdate_Atlantis(allnav, talker):
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
     N = len(subnav)
-    timest = np.empty(N,dtype=datetime)  # array for timestamps, as datetime objects
-    
+    # array for timestamps, as datetime objects
+    timest = np.empty(N, dtype=datetime)
+
     for i in range(N):
         pre = subnav[i].split(talker)[0]
-        date = re.findall('NAV (\d{4})/(\d{2})/(\d{2})',pre)[0]
+        date = re.findall('NAV (\d{4})/(\d{2})/(\d{2})', pre)[0]
         year = int(date[0])  # year
         mon = int(date[1])  # month
         day = int(date[2])  # day
-        timest[i] = datetime(year,mon,day,hour[i],mint[i],sec[i],msec[i],tzinfo=timezone.utc)
+        timest[i] = datetime(year, mon, day, hour[i], mint[i],
+                             sec[i], msec[i], tzinfo=timezone.utc)
     return timest
+
 
 def _navdate_NBP(allnav, talker):
     """Extract datetime info from Palmer nav files (NBP*.d*).
@@ -159,17 +179,21 @@ def _navdate_NBP(allnav, talker):
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
     N = len(subnav)
-    timest = np.empty(N,dtype=datetime)  # array for timestamps, as datetime objects
-    
+    # array for timestamps, as datetime objects
+    timest = np.empty(N, dtype=datetime)
+
     for i in range(N):
         pre = subnav[i].split(talker)[0]
-        date = re.findall('(\d{2})\+(\d{2,3}):.*',pre)[0]
-        year = '20' + date[0]  # year (NBP didn't exist before 2000 so this is ok)
+        date = re.findall('(\d{2})\+(\d{2,3}):.*', pre)[0]
+        # year (NBP didn't exist before 2000 so this is ok)
+        year = '20' + date[0]
         doy = date[1]  # doy
-        timest[i] = datetime.strptime('%s-%s-%02d:%02d:%02d:%06d' % \
-                    (year,doy,hour[i],mint[i],sec[i],msec[i]), '%Y-%j-%H:%M:%S:%f')
+        timest[i] = datetime.strptime('%s-%s-%02d:%02d:%02d:%06d' %
+                                      (year, doy, hour[i], mint[i], sec[i], msec[i]), 
+                                      '%Y-%j-%H:%M:%S:%f')
         timest[i] = timest[i].replace(tzinfo=timezone.utc)
     return timest
+
 
 def _navdate_Thompson(allnav, talker):
     """Extract datetime info from Thompson nav files (POSMV*.Raw).
@@ -179,16 +203,19 @@ def _navdate_Thompson(allnav, talker):
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
     N = len(subnav)
-    timest = np.empty(N,dtype=datetime)  # array for timestamps, as datetime objects
+    # array for timestamps, as datetime objects
+    timest = np.empty(N, dtype=datetime)
 
     for i in range(N):
         pre = subnav[i].split(talker)[0]
-        date = re.findall('(\d{2})/(\d{2})/(\d{4}),*',pre)[0]
+        date = re.findall('(\d{2})/(\d{2})/(\d{4}),*', pre)[0]
         year = int(date[2])
         mon = int(date[0])
         day = int(date[1])
-        timest[i] = datetime(year,mon,day,hour[i],mint[i],sec[i],tzinfo=timezone.utc)
+        timest[i] = datetime(year, mon, day, hour[i],
+                             mint[i], sec[i], tzinfo=timezone.utc)
     return timest
+
 
 def _navdate_Revelle(allnav, talker):
     """Extract datetime info from Revelle nav files (mru_seapatah330_rr_navbho-*.txt).
@@ -198,24 +225,30 @@ def _navdate_Revelle(allnav, talker):
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
     N = len(subnav)
-    timest = np.empty(N,dtype=datetime)  # array for timestamps, as datetime objects
+    # array for timestamps, as datetime objects
+    timest = np.empty(N, dtype=datetime)
     inds = np.where(inav)[0]  # indices in allnav of talker lines
 
     for i in range(N):
-        # timestamp is on a previous line for Revelle - expect one before 
+        # timestamp is on a previous line for Revelle - expect one before
         # for GPGGA but that is not guaranteed
-        if i != 0: j = inds[i-1]  # index of previous talker line
-        if i == 0: j = -1
-        for k in range(inds[i]-1, j, -1):  # step backwards toward the last talker line 
+        if i != 0:
+            j = inds[i-1]  # index of previous talker line
+        if i == 0:
+            j = -1
+        for k in range(inds[i]-1, j, -1):  # step backwards toward the last talker line
             before = allnav[k]
-            if re.match('(\d{4})-(\d{2})-(\d{2})T*',before):  # date is at the start of this line
-                date = re.findall('(\d{4})-(\d{2})-(\d{2})T*',before)[0]
+            # date is at the start of this line
+            if re.match('(\d{4})-(\d{2})-(\d{2})T*', before):
+                date = re.findall('(\d{4})-(\d{2})-(\d{2})T*', before)[0]
                 year = int(date[0])
                 mon = int(date[1])
                 day = int(date[2])
-                timest[i] = datetime(year,mon,day,hour[i],mint[i],sec[i],msec[i],tzinfo=timezone.utc)
+                timest[i] = datetime(
+                    year, mon, day, hour[i], mint[i], sec[i], msec[i], tzinfo=timezone.utc)
                 break  # skip the rest of the stepping backwards once date is found
     return timest
+
 
 def _navdate_Ride(allnav, talker):
     """Extract datetime info from Ride nav files (seapath-navbho_*.raw).
@@ -223,19 +256,28 @@ def _navdate_Ride(allnav, talker):
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
     N = len(subnav)
-    timest = np.empty(N,dtype=datetime)  # array for timestamps, as datetime objects
+    # array for timestamps, as datetime objects
+    timest = np.empty(N, dtype=datetime)
 
     for i in range(N):
-        if talker == 'INGGA': # on Ride, uses posix timestamps
-            date = re.findall('(\d+(\.\d*)?) \$%s' % talker,subnav[i])[0]
-            timest[i] = datetime.fromtimestamp(float(date[0]),tzinfo=timezone.utc)
+        if talker == 'INGGA':  # on Ride, uses posix timestamps
+            date = re.findall('(\d+(\.\d*)?) \$%s' % talker, subnav[i])[0]
+            timest[i] = datetime.fromtimestamp(
+                float(date[0]), tzinfo=timezone.utc)
         elif talker == 'GPGGA':  # includes time only with date, unlike other GPGGAs
-            date = re.findall('(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d.*?)Z',subnav[i])[0]
-            year = int(date[0]); mon = int(date[1]); day = int(date[2])
-            hour = int(date[3]); mint = int(date[4]); sec = int(date[5]); 
+            date = re.findall(
+                '(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d.*?)Z', subnav[i])[0]
+            year = int(date[0])
+            mon = int(date[1])
+            day = int(date[2])
+            hour = int(date[3])
+            mint = int(date[4])
+            sec = int(date[5])
             msec = int(float('.'+date[6])*1e6)
-            timest[i] = datetime(year,mon,day,hour,mint,sec,msec,tzinfo=timezone.utc)
+            timest[i] = datetime(year, mon, day, hour, mint,
+                                 sec, msec, tzinfo=timezone.utc)
     return timest
+
 
 def _navcoords(allnav, talker):
     """Extract longitude and latitude from standard talker strings.
@@ -243,17 +285,23 @@ def _navcoords(allnav, talker):
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
     N = len(subnav)  # and count the linds
-    lon = np.zeros(N); lat = np.zeros(N)  # arrays to hold coordinates
+    lon = np.zeros(N)
+    lat = np.zeros(N)  # arrays to hold coordinates
     for i in range(N):  # loop lines, splitting at talker string
         post = subnav[i].split(talker)[-1].lstrip().split(',')
-        if post[0] == '': post = post[1:]  # correct for spacing in some files
+        if post[0] == '':
+            post = post[1:]  # correct for spacing in some files
 
-        lat[i] = int(post[1][:2]) + float(post[1][2:])/60  # convert to decimal degrees
-        if post[2] == 'S': lat[i] = -lat[i]         # handle coordinate sign
+        lat[i] = int(post[1][:2]) + float(post[1][2:]) / \
+            60  # convert to decimal degrees
+        if post[2] == 'S':
+            lat[i] = -lat[i]         # handle coordinate sign
         lon[i] = int(post[3][:3]) + float(post[3][3:])/60
-        if post[4] == 'W': lon[i] = -lon[i]
+        if post[4] == 'W':
+            lon[i] = -lon[i]
 
     return lon, lat
+
 
 def _clean_180cross(gps_nav):
     """Fix instances where a trackline crosses +/- 180* longitude.
@@ -266,26 +314,27 @@ def _clean_180cross(gps_nav):
     newlon = gps_nav['lon'].values
 
     if sum(lpos) > sum(lneg):
-        newlon[lneg] = 180 + newlon[lneg]%180
+        newlon[lneg] = 180 + newlon[lneg] % 180
     else:
-        newlon[lpos] = -180 + newlon[lpos]%-180
+        newlon[lpos] = -180 + newlon[lpos] % -180
 
     # check if there are still some jumpy points (from between +/- reversals)
     ilocs = np.where(abs(np.diff(newlon)) > 1)[0]  # should not jump a degree
-    if len(ilocs)%2 != 0:  # these are not paired, so one must be an end?
+    if len(ilocs) % 2 != 0:  # these are not paired, so one must be an end?
         pass
     else:  # pairs of indices for jump out and back
         for i in ilocs[::2]:  # assume nice pairwise
             # ad hoc duplication, not great
             newlon[i+1] = (newlon[i] + newlon[i+2])/2
 
-    gps_nav = gps_nav.replace({'lon':newlon})
+    gps_nav = gps_nav.replace({'lon': newlon})
 
     return gps_nav
 
 ########################################################################
 # BGM3 i/o (RGS and serial)
 ########################################################################
+
 
 def read_bgm_rgs(fp, ship):
     """Read BGM gravity from RGS files.
@@ -299,7 +348,7 @@ def read_bgm_rgs(fp, ship):
     :param fp: RGS filepaths, string or list of strings
     :param ship: ship name, string
     """
-    supported_ships = ['Atlantis','NBP']
+    supported_ships = ['Atlantis', 'NBP']
     if ship not in supported_ships:
         print('R/V %s not supported for RGS read yet' % ship)
         return -999
@@ -309,13 +358,13 @@ def read_bgm_rgs(fp, ship):
 
     dats = []
     for path in fp:
-        dat = pd.read_csv(path, delimiter=' ', names=['date','time','grav','lat','lon'], \
-            usecols=(1,2,3,11,12), parse_dates=[[0,1]])
+        dat = pd.read_csv(path, delimiter=' ', names=['date', 'time', 'grav', 'lat', 'lon'],
+                          usecols=(1, 2, 3, 11, 12), parse_dates=[[0, 1]])
         ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
         dat['date_time'] = ndt
         dats.append(dat)
-    
-    return pd.concat(dats,ignore_index=True)
+
+    return pd.concat(dats, ignore_index=True)
 
 
 def read_bgm_raw(fp, ship, scale=None, ship_function=None):
@@ -334,9 +383,10 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None):
     """
     moddir = os.path.dirname(__file__)
     import tomli as tm
-    with open(os.path.join(moddir,'database.toml'),'rb') as f:
+    with open(os.path.join(moddir, 'database.toml'), 'rb') as f:
         info = tm.load(f)
-    sc_fac = info['BGM-scale']  # get instrument scaling factors from database.toml
+    # get instrument scaling factors from database.toml
+    sc_fac = info['BGM-scale']
 
     if scale is not None:
         pass  # use provided scale factor if it's there
@@ -365,37 +415,43 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None):
                 return -999
         dat['rgrav'] = scale*dat['counts']
         dats.append(dat)
-    return pd.concat(dats,ignore_index=True)
+    return pd.concat(dats, ignore_index=True)
+
 
 def _bgmserial_Atlantis(path):
     """Read a BGM raw (serial) file from Atlantis.
     """
-    count = lambda x: (int(x.split(':')[-1]))  # function to parse counts column
-    dat = pd.read_csv(path, delimiter=' ',names=['date','time','counts'],usecols=(1,2,4),\
-            parse_dates=[[0,1]],converters={'counts':count})
-    ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]  # timestamps cannot be naive
+    def count(x): return (
+        int(x.split(':')[-1]))  # function to parse counts column
+    dat = pd.read_csv(path, delimiter=' ', names=['date', 'time', 'counts'], usecols=(1, 2, 4),
+                      parse_dates=[[0, 1]], converters={'counts': count})
+    ndt = [e.tz_localize(timezone.utc)
+           for e in dat['date_time']]  # timestamps cannot be naive
     dat['date_time'] = ndt
     return dat
+
 
 def _bgmserial_Thompson(path):
     """Read a BGM raw (serial) file from Thompson.
     """
-    count = lambda x: (int(x.split(' ')[0].split(':')[-1]))
-    dat = pd.read_csv(path, delimiter=',',names=['date','time','counts'],\
-            parse_dates=[[0,1]],converters={'counts':count})
+    def count(x): return (int(x.split(' ')[0].split(':')[-1]))
+    dat = pd.read_csv(path, delimiter=',', names=['date', 'time', 'counts'],
+                      parse_dates=[[0, 1]], converters={'counts': count})
     ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
     dat['date_time'] = ndt
     return dat
 
+
 def _bgmserial_Revelle(path):
     """Read a BGM raw (serial) file from Revelle.
     """
-    count = lambda x: (int(x.split(':')[-1]))
-    dat = pd.read_csv(path, delimiter=' ',names=['date_time','counts'],usecols=(0,1),\
-            parse_dates=[0],converters={'counts':count})
+    def count(x): return (int(x.split(':')[-1]))
+    dat = pd.read_csv(path, delimiter=' ', names=['date_time', 'counts'], usecols=(0, 1),
+                      parse_dates=[0], converters={'counts': count})
     ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
     dat['date_time'] = ndt
     return dat
+
 
 def _despike_bgm_serial(dat, thresh=8000):
     """Clean out counts spikes in bgm data based on a threshold delta(counts).
@@ -408,7 +464,7 @@ def _despike_bgm_serial(dat, thresh=8000):
     if len(meh) > 2:
         # for spikes these jumps should be in pairs of +/-
         # we really hope this is the case
-        if len(meh)%2 != 0 or np.any(np.diff(meh)[::2] != 1):
+        if len(meh) % 2 != 0 or np.any(np.diff(meh)[::2] != 1):
             print('something is weird with bgm despike')
             return dat
 
@@ -422,6 +478,7 @@ def _despike_bgm_serial(dat, thresh=8000):
 ########################################################################
 # DGS i/o ('laptop' and raw)
 ########################################################################
+
 
 def read_dat_dgs(fp, ship, ship_function=None):
     """Read DGS 'laptop' file(s), usually written as .dat files.
@@ -440,7 +497,7 @@ def read_dat_dgs(fp, ship, ship_function=None):
         if ship_function != None:
             dat = ship_function(path)
         else:
-            if ship in ['Atlantis','Revelle','NBP','Ride','DGStest']:
+            if ship in ['Atlantis', 'Revelle', 'NBP', 'Ride', 'DGStest']:
                 dat = _dgs_laptop_general(path)
             elif ship == 'Thompson':
                 dat = _dgs_laptop_Thompson(path)
@@ -450,26 +507,32 @@ def read_dat_dgs(fp, ship, ship_function=None):
 
         dats.append(dat)  # append the DataFrame for this filepath
 
-    return pd.concat(dats,ignore_index=True)
+    return pd.concat(dats, ignore_index=True)
+
 
 def _dgs_laptop_general(path):
     """Read single laptop file for Atlantis, Revelle, NBP, and Ride.
     """
-    dat = pd.read_csv(path, delimiter=',',names=['rgrav','long_a','crss_a','status','ve','vcc',\
-            'al','ax','lat','lon','year','month','day','hour','minute','second'],\
-            usecols=(1,2,3,6,10,11,12,13,14,15,19,20,21,22,23,24))
-    dat['date_time'] = pd.to_datetime(dat[['year','month','day','hour','minute','second']],utc=True)
+    dat = pd.read_csv(path, delimiter=',', names=['rgrav', 'long_a', 'crss_a', 'status', 've', 'vcc',
+                                                  'al', 'ax', 'lat', 'lon', 'year', 'month', 'day', 
+                                                  'hour', 'minute', 'second'],
+                      usecols=(1, 2, 3, 6, 10, 11, 12, 13, 14, 15, 19, 20, 21, 22, 23, 24))
+    dat['date_time'] = pd.to_datetime(
+        dat[['year', 'month', 'day', 'hour', 'minute', 'second']], utc=True)
     return dat
+
 
 def _dgs_laptop_Thompson(path):
     """Read single laptop file for Thompson, which does things its own way.
     """
-    dat = pd.read_csv(path, delimiter=',',names=['date','time','rgrav','ve','vcc',\
-            'al','ax','lat','lon'],usecols=(0,1,3,12,13,14,15,16,17),\
-            parse_dates=[[0,1]])
+    dat = pd.read_csv(path, delimiter=',', names=['date', 'time', 'rgrav', 've', 'vcc',
+                                                  'al', 'ax', 'lat', 'lon'], 
+                      usecols=(0, 1, 3, 12, 13, 14, 15, 16, 17),
+                      parse_dates=[[0, 1]])
     ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
     dat['date_time'] = ndt
     return dat
+
 
 def read_raw_dgs(fp, ship, scale_ccp=True):
     """Read raw (serial) output files from DGS AT1M.
@@ -497,38 +560,42 @@ def read_raw_dgs(fp, ship, scale_ccp=True):
             dat['ve'] = dat['ve'].mul(0.00001)
             dat['ax'] = dat['ax'].mul(0.00001)
             dat['al'] = dat['al'].mul(0.00001)
-            dat['vcc'] = dat['vcc'].mul(0.00001)  #-0.000029)
+            dat['vcc'] = dat['vcc'].mul(0.00001)  # -0.000029)
         dats.append(dat)
 
-    return pd.concat(dats,ignore_index=True)
+    return pd.concat(dats, ignore_index=True)
+
 
 def _dgs_raw_general(path):
     """Read a DGS raw (serial) file assuming fields are as DGS says they are.
     """
-    dat = pd.read_csv(path, delimiter=',',names=['string','Gravity','Long','Cross','Beam','Temp',\
-                    'Pressure','ElecTemp','vcc','ve','al','ax','status','checksum','latitude',\
-                    'longitude','speed','course','timestamp'],\
-                    usecols=(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18))
+    dat = pd.read_csv(path, delimiter=',', names=['string', 'Gravity', 'Long', 'Cross', 'Beam', 'Temp',
+                                                  'Pressure', 'ElecTemp', 'vcc', 've', 'al', 'ax', 
+                                                  'status', 'checksum', 'latitude',
+                                                  'longitude', 'speed', 'course', 'timestamp'],
+                      usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18))
 
     conv_times = True  # assume column 18 is actually timestamps
     if str(dat.iloc[0].timestamp).startswith('1'):  # 1 Hz, 1 second
-        conv_times = False # clock not synced, so don't try to convert to stamp
+        conv_times = False  # clock not synced, so don't try to convert to stamp
 
     if conv_times:  # probably UTC stamps
-        new_dates = pd.to_datetime(dat['timestamp'],utc=True,format='%Y%m%d%H%M%S')
+        new_dates = pd.to_datetime(
+            dat['timestamp'], utc=True, format='%Y%m%d%H%M%S')
         dat['date_time'] = new_dates
 
     # special case of not synced for timestamp, but stamp might be in string elsewhere
-    if not conv_times and not dat.iloc[0]['string'].startswith('$'): 
+    if not conv_times and not dat.iloc[0]['string'].startswith('$'):
         # split string for possible timestamp
         try:
-            times = [e.split(' ')[0] for e in dat['string'].values]            
-            dat['date_time'] = pd.to_datetime(times,format='ISO8601')
+            times = [e.split(' ')[0] for e in dat['string'].values]
+            dat['date_time'] = pd.to_datetime(times, format='ISO8601')
         except:
             print('raw (serial) timestamps not found/converted')
-            pass # if it doesn't work, oh well
+            pass  # if it doesn't work, oh well
 
     return dat
+
 
 def _dgs_raw_Thompson(path):
     """Read a DGS raw (serial) file with Thompson conventions.
@@ -538,13 +605,16 @@ def _dgs_raw_Thompson(path):
     stamps that are also comma-separated so the csv read used for those
     other ships does not work properly.
     """
-    dat = pd.read_csv(path, delimiter=',',names=['date','time','string','Gravity','Long','Cross',\
-                    'Beam','Temp','Pressure','ElecTemp','vcc','ve','al','ax','status','checksum',\
-                    'latitude','longitude','speed','course'],\
-                    usecols=(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19))
-    dat['stamps'] = [':'.join([e[1]['date'],e[1]['time']]) for e in dat.iterrows()]
-    dat['date_time'] = pd.to_datetime(dat['stamps'],utc=True,format='%m/%d/%Y:%H:%M:%S.%f')
-    dat.drop('stamps',axis=1,inplace=True)
+    dat = pd.read_csv(path, delimiter=',', names=['date', 'time', 'string', 'Gravity', 'Long', 'Cross',
+                                                  'Beam', 'Temp', 'Pressure', 'ElecTemp', 'vcc', 've', 
+                                                  'al', 'ax', 'status', 'checksum',
+                                                  'latitude', 'longitude', 'speed', 'course'],
+                      usecols=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19))
+    dat['stamps'] = [':'.join([e[1]['date'], e[1]['time']])
+                     for e in dat.iterrows()]
+    dat['date_time'] = pd.to_datetime(
+        dat['stamps'], utc=True, format='%m/%d/%Y:%H:%M:%S.%f')
+    dat.drop('stamps', axis=1, inplace=True)
 
     return dat
 
@@ -552,7 +622,8 @@ def _dgs_raw_Thompson(path):
 # reading other things (MRU etc)
 ########################################################################
 
-def read_other_stuff(yaml_file,data_file,tag):
+
+def read_other_stuff(yaml_file, data_file, tag):
     """Read a particular feed (eg, $PASHR) from a data file + yaml file.
 
     This function parses strings for the desired feed and returns info as a 
@@ -568,41 +639,47 @@ def read_other_stuff(yaml_file,data_file,tag):
     :param tag: the name of the feed, with or without the $ prepended
     """
 
-    if tag.startswith('$'): tag = tag[1:]
+    if tag.startswith('$'):
+        tag = tag[1:]
     dtag = '$' + tag
 
     # read yaml, check that tag specs are in this file
-    with open(yaml_file,'r') as f:
+    with open(yaml_file, 'r') as f:
         ym = yaml.safe_load(f)
     ym = ym[list(ym.keys())[0]]  # skip out of the top level key
-    assert tag in ym['format'].keys(), '%s feed specs not present in yaml file %s' % (tag, yaml_file)
+    assert tag in ym['format'].keys(
+    ), '%s feed specs not present in yaml file %s' % (tag, yaml_file)
 
     # check to make sure tag appears in the data file
-    with open(data_file,'rb') as file:
+    with open(data_file, 'rb') as file:
         s = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
-        result = s.find(bytes(tag,'ascii'))
+        result = s.find(bytes(tag, 'ascii'))
     assert result != -1, '%s not in data file %s' % (tag, data_file)
 
     # checks done, read in all the lines for this feed
     lines = []
     s.seek(0)
-    ln = s.readline().decode('ascii').rstrip()  # get line, bytes->string, strip \r\n from end
+    # get line, bytes->string, strip \r\n from end
+    ln = s.readline().decode('ascii').rstrip()
     while s.tell() < s.size():  # when s.tell() == s.size(), we got to the end of the file
         if tag in ln:
             lines.append(ln)
         ln = s.readline().decode('ascii').rstrip()  # next!
-    
+
     # split the lines at the tag, and then after the tag (fields named in yaml are post-tag)
-    tagsplit = [e.split(dtag) for e in lines]  # split into pre-tag (might be '') and post-tag
-    #tagjoin = [','.join(tagsplit[i][0].strip(),tagsplit[i][1].strip(',')) for i in range(len(tagsplit))]
-    named_fields = [tagsplit[i][1].strip(',').split(',') for i in range(len(tagsplit))]
+    # split into pre-tag (might be '') and post-tag
+    tagsplit = [e.split(dtag) for e in lines]
+    # tagjoin = [','.join(tagsplit[i][0].strip(),tagsplit[i][1].strip(',')) for i in range(len(tagsplit))]
+    named_fields = [tagsplit[i][1].strip(',').split(
+        ',') for i in range(len(tagsplit))]
 
     # make a dataframe, using yaml and including any timestamp-like info that might be before the tag
     # Note that the format of the lines we're working with is usually some variation on:
     # [date/timestamp, maybe], $TAG, comma, separated, fields, listed, in, yaml
-    colnames = re.sub('{|}','',ym['format'][tag]).split(',')[1:]
-    df = pd.DataFrame(named_fields,columns=colnames)
-    df['mystery'] = [tagsplit[i][0] for i in range(len(tagsplit))]  # any pre-tag stuff
+    colnames = re.sub('{|}', '', ym['format'][tag]).split(',')[1:]
+    df = pd.DataFrame(named_fields, columns=colnames)
+    df['mystery'] = [tagsplit[i][0]
+                     for i in range(len(tagsplit))]  # any pre-tag stuff
 
     # finally, gather some other column info from the yaml file to output
     col_info = {}
@@ -612,4 +689,4 @@ def read_other_stuff(yaml_file,data_file,tag):
         except KeyError:
             pass
 
-    return df.apply(pd.to_numeric,errors='ignore'), col_info
+    return df.apply(pd.to_numeric, errors='ignore'), col_info

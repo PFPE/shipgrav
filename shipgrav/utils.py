@@ -5,6 +5,7 @@ import re
 
 # TODO gaussian filter doesn't *need* time array
 
+
 def gaussian_filter(x, fl):
     """ Apply a gaussian filter to a vector.
 
@@ -47,14 +48,15 @@ def _gaussian_coeffs(fl):
 
     gauss_prms = np.zeros(coeff_len)
     m = 0
-    for i in range(coeff_len,0,-1):
+    for i in range(coeff_len, 0, -1):
         x = (half_sample - i)*frac
         x = -.5*x**2
         gauss_prms[m] = np.exp(x)
         m += 1
 
     # reflect
-    gauss_prms = np.hstack((gauss_prms[1:][::-1], gauss_prms[0], gauss_prms[1:]))
+    gauss_prms = np.hstack(
+        (gauss_prms[1:][::-1], gauss_prms[0], gauss_prms[1:]))
 
     # normalize
     gauss_prms = gauss_prms/sum(gauss_prms)
@@ -62,7 +64,7 @@ def _gaussian_coeffs(fl):
     return gauss_prms
 
 
-def status_bits(stat,key='status'):
+def status_bits(stat, key='status'):
     """ Decode status bits from integers in DGS gravimeter files.
 
     Return flags as a dict (for one integer input) or a dataframe (status df input)
@@ -72,23 +74,24 @@ def status_bits(stat,key='status'):
     :param key: the DataFrame column for the status bits if input is a DataFrame
     """
     # flags from Jasmine's code
-    #flags = ['clamp','unclamp','GPSsync','feedback','R1','R2','ADlock','Rcvd',\
+    # flags = ['clamp','unclamp','GPSsync','feedback','R1','R2','ADlock','Rcvd',\
     #        'NavMod1','NavMod2','Free','SensCom','GPStime','ADsat','Datavalid','PlatCom']
     # flags from DGS documentation?
-    flags = ['clamp status','GPSsync','reserved','feedback','R1','R2','ADlock','ack host',\
-            'NavMod1','NavMod2','dgs1_trouble','dgs2_trouble','GPStime','ADsat','nemo1','nemo2']
+    flags = ['clamp status', 'GPSsync', 'reserved', 'feedback', 'R1', 'R2', 'ADlock', 'ack host',
+             'NavMod1', 'NavMod2', 'dgs1_trouble', 'dgs2_trouble', 'GPStime', 'ADsat', 'nemo1', 'nemo2']
 
-    assert type(stat) == int or type(stat) == DataFrame, 'bad input type for status bits'
+    assert type(stat) == int or type(
+        stat) == DataFrame, 'bad input type for status bits'
     if type(stat) == int:
-        bt = format(stat,'016b')
+        bt = format(stat, '016b')
         out = {}
-        for i,f in enumerate(flags):
+        for i, f in enumerate(flags):
             out[f] = bt[i]
         return out
-    else: # dataframe, add columns
-        bts = np.array([format(s,'016b') for s in stat[key]])
-        for i,f in enumerate(flags):
-            stat.insert(i+1,f,[b[i] for b in bts])
+    else:  # dataframe, add columns
+        bts = np.array([format(s, '016b') for s in stat[key]])
+        for i, f in enumerate(flags):
+            stat.insert(i+1, f, [b[i] for b in bts])
         return stat
 
 
@@ -100,27 +103,27 @@ def clean_ini_to_toml(ini_file):
     It writes out a toml file named by default as ini_file:r.toml
     """
 
-    with open(ini_file,'r') as file:
+    with open(ini_file, 'r') as file:
         text = file.read()  # just read the whole thing
 
     # fix comments (// to #)
-    text = re.sub('//','#',text)
+    text = re.sub('//', '#', text)
 
     # clean out tabs
-    text = re.sub('\t','  ',text)
+    text = re.sub('\t', '  ', text)
 
     # fix TRUE and FALSE
-    text = re.sub('TRUE','true',text)
-    text = re.sub('FALSE','false',text)
+    text = re.sub('TRUE', 'true', text)
+    text = re.sub('FALSE', 'false', text)
 
-    text = re.sub('$','',text)
+    text = re.sub('$', '', text)
 
     # fix unquoted strings and write
-    fo = open(ini_file.rstrip('ini')+'toml','w')
+    fo = open(ini_file.rstrip('ini')+'toml', 'w')
     lines = text.split('\n')
     for ln in lines:
         if ln.startswith('$'):
-            ln = re.sub('\$','',ln)  # clean out $ for talkers
+            ln = re.sub('\$', '', ln)  # clean out $ for talkers
 
         if ln.startswith('[') or ln.startswith('#') or ln == '':
             fo.write(ln)
@@ -146,14 +149,15 @@ def clean_ini_to_toml(ini_file):
             float(val)
         except:
             val = "\"" + val + "\""
-            ln = '= '.join((ln.split('=')[0],val))
+            ln = '= '.join((ln.split('=')[0], val))
             if extra_comm != '':
-                ln = '   #'.join((ln,extra_comm))
+                ln = '   #'.join((ln, extra_comm))
         fo.write(ln)
         fo.write('\n')
 
     fo.close()
     return
+
 
 class _SnappingCursor:
     """A cross-hair cursor that snaps to the closest *x* point on a line
@@ -191,21 +195,23 @@ class _SnappingCursor:
     :param data: pd.DataFrame with tsec, lon_new, and lat_new columns that correspond
         to what's plotted in both axes
     """
+
     def __init__(self, ax1, ax2, line, dot, data):
         self.ax1 = ax1
         self.dot = dot
         self.data = data
         minx = ax1.get_xlim()[0]
         maxy = ax1.get_ylim()[1]
-        self.horizontal_line = ax1.axhline(y=maxy,color='k', lw=0.8, ls='--')
-        self.vertical_line = ax1.axvline(x=minx,color='k', lw=0.8, ls='--')
+        self.horizontal_line = ax1.axhline(y=maxy, color='k', lw=0.8, ls='--')
+        self.vertical_line = ax1.axvline(x=minx, color='k', lw=0.8, ls='--')
         self.x, self.y = line.get_data()
         self._last_index = None
 
         self.x_seg = []
         self.y_seg = []
         self.i_seg = []
-        self.scatters = ax2.plot(self.x_seg, self.y_seg, marker='o',color='r',linestyle=None)
+        self.scatters = ax2.plot(
+            self.x_seg, self.y_seg, marker='o', color='r', linestyle=None)
 
     def set_cross_hair_visible(self, visible):
         need_redraw = self.horizontal_line.get_visible() != visible
@@ -234,7 +240,8 @@ class _SnappingCursor:
 
             # and also update ax2 dot
             ind_x = np.argmin(abs(x - self.data['tsec']))
-            self.dot.update({'xdata':[self.data.iloc[ind_x]['lon_new'],],'ydata':[self.data.iloc[ind_x]['lat_new'],]})
+            self.dot.update({'xdata': [self.data.iloc[ind_x]['lon_new'],], 'ydata': [
+                            self.data.iloc[ind_x]['lat_new'],]})
             self.ax1.figure.canvas.draw()
 
     def on_mouse_click(self, event):
@@ -244,13 +251,12 @@ class _SnappingCursor:
             self.x_seg.append(self.data.iloc[ind_x]['lon_new'])
             self.y_seg.append(self.data.iloc[ind_x]['lat_new'])
             self.i_seg.append(ind_x)
-            self.scatters[0].update({'xdata':self.x_seg, 'ydata':self.y_seg})
+            self.scatters[0].update({'xdata': self.x_seg, 'ydata': self.y_seg})
 
         if event.button == 3:  # pop the last element of the lists
             self.x_seg.pop()
             self.y_seg.pop()
             self.i_seg.pop()
-            self.scatters[0].update({'xdata':self.x_seg, 'ydata':self.y_seg})
+            self.scatters[0].update({'xdata': self.x_seg, 'ydata': self.y_seg})
 
         self.ax1.figure.canvas.draw()
-

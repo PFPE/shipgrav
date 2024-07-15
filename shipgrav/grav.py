@@ -11,11 +11,13 @@ from copy import copy
 # TODO crustal thickness - array dimensions and reshapes
 
 # impulse response of 10th order Taylor series differentiator
-tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6, 0, -5/6, 5/21, -5/84, 5/504, -1/1260]
+tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6,
+         0, -5/6, 5/21, -5/84, 5/504, -1/1260]
 
 ########################################################################
 # tidal correction
 ########################################################################
+
 
 def _convert_datetime_tidetime(timestamp):
     """Calculate julian century and hour from a timestamp.
@@ -28,12 +30,13 @@ def _convert_datetime_tidetime(timestamp):
     dt = timestamp - origin_time
     days = dt.days + dt.seconds/3600./24.
     julian_century = days/36525
-    julian_hour = (timestamp.hour + timestamp.minute/60. + timestamp.second/3600.)
+    julian_hour = (timestamp.hour + timestamp.minute /
+                   60. + timestamp.second/3600.)
 
     return julian_century, julian_hour
 
 
-def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
+def longman_tide_pred(lon, lat, times, alt=0, return_components=False):
     """ Calculate predicted tidal effect on gravity using the Longman algorithm.
 
     The calculation is taken directly from
@@ -60,9 +63,12 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
     T, t0 = np.empty(len(times)), np.empty(len(times))
     for i, stamp in enumerate(times):
         a, b = _convert_datetime_tidetime(stamp)
-        T[i] = a; t0[i] = b
-        if t0[i] < 0: t0[i] += 24
-        if t0[i] >= 24: t0[i] == 24
+        T[i] = a
+        t0[i] = b
+        if t0[i] < 0:
+            t0[i] += 24
+        if t0[i] >= 24:
+            t0[i] == 24
 
     TT = T*T    # squares and cubes are used a lot so shortcut them
     TTT = T*T*T
@@ -73,8 +79,8 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
     S = 1.993e33  # Mass of the sun in grams
     e = 0.05490  # Eccentricity of the moon's orbit
     m = 0.074804  # Ratio of mean motion of the sun to that of the moon
-    c = 3.84402e10 # Mean distance between the centers of the earth and the moon
-    c1 = 1.495e13 # Mean distance between centers of the earth and sun in cm
+    c = 3.84402e10  # Mean distance between the centers of the earth and the moon
+    c1 = 1.495e13  # Mean distance between centers of the earth and sun in cm
     h2 = 0.612  # Love parameter
     k2 = 0.303  # Love parameter
     a = 6.378270e8  # Earth's equitorial radius in cm
@@ -87,7 +93,7 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
     # Longman convention has W+/E- for unknown reasons
     L = -lon
 
-    ## Lunar gravity effects (Shureman 1941 coeffs)
+    # Lunar gravity effects (Shureman 1941 coeffs)
     # mean longitude of the moon in its orbit, reckoned from the referred equinox
     s = 4.720023434 + 8399.709299*T + 0.0000440696*TT  # skip 3rd order bc it is tiny
     # mean longitude of lunar perigee
@@ -118,10 +124,10 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
     # mean longitude of moon in radians in its orbit reckoned from A
     sigma = s - xi
     # longitude of moon in its orbit reckoned from its ascending intersection with the equator
-    l = (sigma + 2*e*np.sin(s - p) + (5./4)*e*e*np.sin(2*(s - p)) +
-        (15./4)*m*e*np.sin(s - 2*h + p) + (11./8)*m*m*np.sin(2*(s - h)))
+    L = (sigma + 2*e*np.sin(s - p) + (5./4)*e*e*np.sin(2*(s - p)) +
+         (15./4)*m*e*np.sin(s - 2*h + p) + (11./8)*m*m*np.sin(2*(s - h)))
 
-    ## Solar calculations
+    # Solar calculations
     #  mean longitude of solar perigee
     p1 = 4.908229461 + 0.03000526416*T + 0.000007902463*TT  # skip tiny 3rd order term
     # eccentricity of Earth's orbit
@@ -130,16 +136,16 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
     # right ascension of meridian of place of observations reckoned from the vernal equinox
     chi1 = t + h
     # longitude of sun in the ecliptic reckoned from the vernal equinox
-    l1 = h + 2*e1*np.sin(h - p1)
+    L1 = h + 2*e1*np.sin(h - p1)
     # cosine(theta) where theta is the zenith angle of the moon
-    cos_theta = (np.sin(lamb)*np.sin(I)*np.sin(l) + np.cos(lamb)*(np.cos(0.5*I)**2
-                *np.cos(l - chi) + np.sin(0.5*I)**2*np.cos(l + chi)))
+    cos_theta = (np.sin(lamb)*np.sin(I)*np.sin(L) + np.cos(lamb)*(np.cos(0.5*I)**2
+                                                                  * np.cos(L - chi) + np.sin(0.5*I)**2*np.cos(L + chi)))
     # cosine(phi) where phi is the zenith angle of the sun
-    cos_phi = (np.sin(lamb)*np.sin(omega)*np.sin(l1) + np.cos(lamb)*
-              (np.cos(0.5*omega)**2*np.cos(l1 - chi1) +
-              np.sin(0.5*omega)**2*np.cos(l1 + chi1)))
+    cos_phi = (np.sin(lamb)*np.sin(omega)*np.sin(L1) + np.cos(lamb) *
+               (np.cos(0.5*omega)**2*np.cos(L1 - chi1) +
+               np.sin(0.5*omega)**2*np.cos(L1 + chi1)))
 
-    ## Distance
+    # Distance
     # distance parameter, eq. 34 in Longman 1959
     C = np.sqrt(1./(1 + 0.006738*np.sin(lamb)**2))
     # distance from point P to the center of the Earth
@@ -149,16 +155,16 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
     # distance parameter, eq. 32 in Longman 1959
     aprime1 = 1. / (c1 * (1 - e1 * e1))
     # distance between centers of the Earth and the moon
-    d = (1./((1./c) + aprime*e*np.cos(s - p) + aprime*e*e*
-        np.cos(2*(s - p)) + (15./8)*aprime*m*e*np.cos(s - 2*h + p)
-        + aprime*m*m*np.cos(2*(s - h))))
+    d = (1./((1./c) + aprime*e*np.cos(s - p) + aprime*e*e *
+             np.cos(2*(s - p)) + (15./8)*aprime*m*e*np.cos(s - 2*h + p)
+             + aprime*m*m*np.cos(2*(s - h))))
     # distance between centers of the Earth and the sun
     D = 1./((1./c1) + aprime1*e1*np.cos(h - p1))
 
     # vertical component of tidal acceleration due to the moon
-    gm = ((mu*M*r/(d*d*d))*(3*cos_theta**2 - 1) + (3./2)*
-         (mu*M*r*r/(d*d*d*d))*(5*cos_theta**3 - 3*cos_theta))
-    # vertical componet of tidal acceleration due to the sun
+    gm = ((mu*M*r/(d*d*d))*(3*cos_theta**2 - 1) + (3./2) *
+          (mu*M*r*r/(d*d*d*d))*(5*cos_theta**3 - 3*cos_theta))
+    # vertical component of tidal acceleration due to the sun
     gs = mu*S*r/(D*D*D)*(3*cos_phi**2 - 1)
 
     love = (1 + h2 - 1.5*k2)
@@ -172,7 +178,8 @@ def longman_tide_pred(lon,lat,times,alt=0,return_components=False):
 # Eotvos correction
 ########################################################################
 
-def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
+
+def eotvos_full(lon, lat, ht, samp, a=6378137.0, b=6356752.3142):
     """ Full Eotvos correction in mGals
 
     From Harlan 1968, "Eotvos Corrections for Airborne Gravimetry" JGR 73(14)
@@ -194,19 +201,20 @@ def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
     :param a: optional, major axis of ellipsoid (default is WGS84)
     :param b: optional, minor axis of ellipsoid (default is WGS84)
     """
-    We=0.00007292115    # siderial rotation rate, radians/sec
-    mps2mgal=100000     # m/s/s to mgal
+    We = 0.00007292115    # siderial rotation rate, radians/sec
+    mps2mgal = 100000     # m/s/s to mgal
     ecc = (a-b)/a
 
-    latr = np.deg2rad(lat); lonr = np.deg2rad(lon)
+    latr = np.deg2rad(lat)
+    lonr = np.deg2rad(lon)
 
     # get time derivatives of position
-    dlat = center_diff(latr,1,samp)
-    ddlat = center_diff(latr,2,samp)
-    dlon = center_diff(lonr,1,samp)
-    ddlon = center_diff(lonr,2,samp)
-    dht = center_diff(ht,1,samp)
-    ddht = center_diff(ht,2,samp)
+    dlat = center_diff(latr, 1, samp)
+    ddlat = center_diff(latr, 2, samp)
+    dlon = center_diff(lonr, 1, samp)
+    ddlon = center_diff(lonr, 2, samp)
+    dht = center_diff(ht, 1, samp)
+    ddht = center_diff(ht, 2, samp)
 
     # sines and cosines etc
     slat = np.sin(latr[1:-1])
@@ -225,15 +233,20 @@ def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
     ddD = 2*ddlat*ecc*c2lat - 4*dlat*dlat*ecc*s2lat
 
     # define r and its derivatives
-    r = np.vstack((-rp*np.sin(D), np.zeros(len(rp)), -rp*np.cos(D) - ht[1:-1])).T
-    rdot = np.vstack((-drp*np.sin(D) - rp*dD*np.cos(D), np.zeros(len(rp)), -drp*np.cos(D) + rp*dD*np.sin(D) - dht)).T
-    ci = -ddrp*np.sin(D) - 2.*drp*dD*np.cos(D) - rp*(ddD*np.cos(D) - dD*dD*np.sin(D))
-    ck = -ddrp*np.cos(D) + 2.*drp*dD*np.sin(D) + rp*(ddD*np.sin(D) + dD*dD*np.cos(D) - ddht)
+    r = np.vstack((-rp*np.sin(D), np.zeros(len(rp)), -
+                  rp*np.cos(D) - ht[1:-1])).T
+    rdot = np.vstack((-drp*np.sin(D) - rp*dD*np.cos(D),
+                     np.zeros(len(rp)), -drp*np.cos(D) + rp*dD*np.sin(D) - dht)).T
+    ci = -ddrp*np.sin(D) - 2.*drp*dD*np.cos(D) - rp * \
+        (ddD*np.cos(D) - dD*dD*np.sin(D))
+    ck = -ddrp*np.cos(D) + 2.*drp*dD*np.sin(D) + rp * \
+        (ddD*np.sin(D) + dD*dD*np.cos(D) - ddht)
     rdotdot = np.vstack((ci, np.zeros(len(ci)), ck)).T
 
     # define w and derivative
     w = np.vstack(((dlon + We)*clat, -dlat, -(dlon + We)*slat)).T
-    wdot = np.vstack((dlon*clat - (dlon + We)*dlat*slat, -ddlat, -ddlon*slat - (dlon + We)*dlat*clat)).T
+    wdot = np.vstack((dlon*clat - (dlon + We)*dlat*slat, -
+                     ddlat, -ddlon*slat - (dlon + We)*dlat*clat)).T
 
     w2xrdot = np.cross(2*w, rdot)
     wdotxr = np.cross(wdot, r)
@@ -253,7 +266,7 @@ def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
 
     # Eotvos correction is the vertical component of the total acceleraton of
     # the aircraft minus the centrifugal acceleration of the Earth, convert to mGal
-    E = (a[:,2] - wexwexr[:,2])*mps2mgal
+    E = (a[:, 2] - wexwexr[:, 2])*mps2mgal
     E = np.hstack((E[0], E, E[-1]))
 
     return E
@@ -262,7 +275,8 @@ def eotvos_full(lon,lat,ht,samp,a=6378137.0,b=6356752.3142):
 # latitude correction functions
 ########################################################################
 
-def fa_2ord(lat,ht):
+
+def fa_2ord(lat, ht):
     """ 2nd order free-air correction
 
     :param lat: latitude, degrees
@@ -271,6 +285,7 @@ def fa_2ord(lat,ht):
     s2lat = np.sin(np.deg2rad(lat))**2
 
     return -((0.3087691 - 0.0004398*s2lat)*ht) + 7.2125e-8*(ht**2)
+
 
 def wgs_grav(lat):
     """ Theoretical gravity for WGS84 ellipsoid
@@ -287,7 +302,8 @@ def wgs_grav(lat):
 # cross-coupling coefficients
 ########################################################################
 
-def calc_ccp(faa_in,vcc_in,ve_in,al_in,ax_in,level_in,times=None,samplerate=1):
+
+def calc_ccp(faa_in, vcc_in, ve_in, al_in, ax_in, level_in, times=None, samplerate=1):
     """ Daniel Aliod's version of calculating cross-coupling coefficients from some data
 
     :param faa_in: free air anomaly, filtered
@@ -304,32 +320,38 @@ def calc_ccp(faa_in,vcc_in,ve_in,al_in,ax_in,level_in,times=None,samplerate=1):
     """
 
     end_inds = np.array([len(faa_in),])  # just the one
-    if times is not None:  # supplied a vector of timestamps to go with everything else 
+    if times is not None:  # supplied a vector of timestamps to go with everything else
         # split data into segments of continuous even sample rate
         tdiff = np.diff(times)
-        if np.any(tdiff>5*samplerate):
-            end_inds = np.where(tdiff > 5*samplerate)[0]  # 5 sec gap doesn't matter much I hope???
+        if np.any(tdiff > 5*samplerate):
+            # 5 sec gap doesn't matter much I hope???
+            end_inds = np.where(tdiff > 5*samplerate)[0]
 
-    end_inds = np.append(-1,end_inds)  # add starting point
+    end_inds = np.append(-1, end_inds)  # add starting point
 
-    faa_tf = np.array([]); vcc_tf = np.array([]); 
-    ve_tf = np.array([]); al_tf = np.array([]); ax_tf = np.array([]); le_tf = np.array([])  # things to fit
+    faa_tf = np.array([])
+    vcc_tf = np.array([])
+    ve_tf = np.array([])
+    al_tf = np.array([])
+    ax_tf = np.array([])
+    le_tf = np.array([])  # things to fit
 
-    for i in range(1,len(end_inds)):  # loop continuous-time segments
+    for i in range(1, len(end_inds)):  # loop continuous-time segments
         faa = faa_in[end_inds[i-1]+1:end_inds[i]]
         vcc = vcc_in[end_inds[i-1]+1:end_inds[i]]
         ve = ve_in[end_inds[i-1]+1:end_inds[i]]
         al = al_in[end_inds[i-1]+1:end_inds[i]]
         ax = ax_in[end_inds[i-1]+1:end_inds[i]]
         level = level_in[end_inds[i-1]+1:end_inds[i]]
-        if len(faa) < 1000: continue  # no point for very short segments
+        if len(faa) < 1000:
+            continue  # no point for very short segments
         # double derivatives with taylor series
-        gpp = np.convolve(np.convolve(faa,tay10,'same'),tay10,'same')
-        vccpp = np.convolve(np.convolve(vcc,tay10,'same'),tay10,'same')
-        vepp = np.convolve(np.convolve(ve,tay10,'same'),tay10,'same')
-        alpp = np.convolve(np.convolve(al,tay10,'same'),tay10,'same')
-        axpp = np.convolve(np.convolve(ax,tay10,'same'),tay10,'same')
-        levpp = np.convolve(np.convolve(level,tay10,'same'),tay10,'same')
+        gpp = np.convolve(np.convolve(faa, tay10, 'same'), tay10, 'same')
+        vccpp = np.convolve(np.convolve(vcc, tay10, 'same'), tay10, 'same')
+        vepp = np.convolve(np.convolve(ve, tay10, 'same'), tay10, 'same')
+        alpp = np.convolve(np.convolve(al, tay10, 'same'), tay10, 'same')
+        axpp = np.convolve(np.convolve(ax, tay10, 'same'), tay10, 'same')
+        levpp = np.convolve(np.convolve(level, tay10, 'same'), tay10, 'same')
 
         # trim the ends
         gpp = gpp[10:-10]
@@ -342,7 +364,7 @@ def calc_ccp(faa_in,vcc_in,ve_in,al_in,ax_in,level_in,times=None,samplerate=1):
         # fairly narrow filter to get rid of any high-freq noise generated by the double derivation
         filterlength = 100  # Aliod code has this as 10...but that gives VERY different cc values
         taps = int(2*filterlength)
-        BM = firwin(taps,1/taps,window='blackman')
+        BM = firwin(taps, 1/taps, window='blackman')
         fgpp = lfilter(BM, 1, gpp)
         fvccpp = lfilter(BM, 1, vccpp)
         fvepp = lfilter(BM, 1, vepp)
@@ -358,12 +380,12 @@ def calc_ccp(faa_in,vcc_in,ve_in,al_in,ax_in,level_in,times=None,samplerate=1):
         faxpp = faxpp[taps:-taps]
         flevpp = flevpp[taps:-taps]
 
-        faa_tf  = np.append(faa_tf,fgpp)
-        vcc_tf = np.append(vcc_tf,fvccpp)
-        ve_tf = np.append(ve_tf,fvepp)
-        al_tf = np.append(al_tf,falpp)
-        ax_tf = np.append(ax_tf,faxpp)
-        le_tf = np.append(le_tf,flevpp)
+        faa_tf = np.append(faa_tf, fgpp)
+        vcc_tf = np.append(vcc_tf, fvccpp)
+        ve_tf = np.append(ve_tf, fvepp)
+        al_tf = np.append(al_tf, falpp)
+        ax_tf = np.append(ax_tf, faxpp)
+        le_tf = np.append(le_tf, flevpp)
 
     faa_tf = np.array(faa_tf).flatten()
     vcc_tf = np.array(vcc_tf).flatten()
@@ -373,18 +395,20 @@ def calc_ccp(faa_in,vcc_in,ve_in,al_in,ax_in,level_in,times=None,samplerate=1):
     le_tf = np.array(le_tf).flatten()
 
     # solve for curvature equation by simple regression (OLS)
-    df = DataFrame({'ve':ve_tf,'vcc':vcc_tf,'al':al_tf,'ax':ax_tf,'lev':le_tf,'g':-faa_tf})
-    x = df[['ve','vcc','al','ax','lev']]
+    df = DataFrame({'ve': ve_tf, 'vcc': vcc_tf, 'al': al_tf,
+                   'ax': ax_tf, 'lev': le_tf, 'g': -faa_tf})
+    x = df[['ve', 'vcc', 'al', 'ax', 'lev']]
     y = df['g']
     x = add_constant(x)
-    model = OLS(y,x).fit()
+    model = OLS(y, x).fit()
     return df, model
 
 ########################################################################
 # things loosely connected to tilt corrections
 ########################################################################
 
-def center_diff(y,n,samp):
+
+def center_diff(y, n, samp):
     """ numerical derivatives, central difference of nth order
 
     :param y: data vector
@@ -434,7 +458,7 @@ def up_vecs(dt, g, cacc, lacc, on_off, cper, cdamp, lper, ldamp):
     return up_vecs
 
 
-def _tilt_filter(per,dt,damp=False):
+def _tilt_filter(per, dt, damp=False):
     """ Filter coefficitnes for L&R platform tilt computation
 
     :param per: platform period, seconds
@@ -442,7 +466,8 @@ def _tilt_filter(per,dt,damp=False):
     :param damp: optional, platform damping; default = sqrt(2)/2
     """
 
-    if not damp: damp = np.sqrt(2)/2
+    if not damp:
+        damp = np.sqrt(2)/2
 
     # frequencies:
     w0 = (2*np.pi)/per
@@ -471,7 +496,7 @@ def _tilt_filter(per,dt,damp=False):
     return num, den
 
 
-def _calc_up_vecs(ctilt,ltilt):
+def _calc_up_vecs(ctilt, ltilt):
     """ calculate 3xN matrix of platform up-vectors in (cross, long, up) coordinates
 
     :param ctilt: cross-axis tilt angles in radians
@@ -479,31 +504,33 @@ def _calc_up_vecs(ctilt,ltilt):
     """
 
     # get increments, assuming initial is 0
-    inc_ct = np.append(ctilt[0],np.diff(ctilt))
-    inc_lt = np.append(ltilt[0],np.diff(ltilt))
+    inc_ct = np.append(ctilt[0], np.diff(ctilt))
+    inc_lt = np.append(ltilt[0], np.diff(ltilt))
 
     # trig functions of tilts
-    sc = np.sin(ctilt); cc = np.cos(ctilt)
-    sl = np.sin(ltilt); cl = np.cos(ltilt)
+    sc = np.sin(ctilt)
+    cc = np.cos(ctilt)
+    sl = np.sin(ltilt)
+    cl = np.cos(ltilt)
 
     # set up array to hold output
     n = len(ctilt)
-    up_vecs = np.zeros((3,n))
+    up_vecs = np.zeros((3, n))
 
     # do rotations
     for i in range(n):
         # rotation matrics
-        rotc = np.array([[cc[i], 0, -sc[i]],[0, 1, 0],[sc[i], 0, cc[i]]])
-        rotl = np.array([[1, 0, 0],[0, cl[i], -sl[i]],[0, sl[i], cl[i]]])
+        rotc = np.array([[cc[i], 0, -sc[i]], [0, 1, 0], [sc[i], 0, cc[i]]])
+        rotl = np.array([[1, 0, 0], [0, cl[i], -sl[i]], [0, sl[i], cl[i]]])
 
         # alternate order of rotations for reasons that I do not understand
-        plat_up = [0,0,1]  # start with vertical platform
-        if i%2 == 0:
+        plat_up = [0, 0, 1]  # start with vertical platform
+        if i % 2 == 0:
             plat_up = np.matmul(rotc, np.matmul(rotl, plat_up))
         else:
             plat_up = np.matmul(rotl, np.matmul(rotc, plat_up))
 
-        up_vecs[:,i] = plat_up
+        up_vecs[:, i] = plat_up
 
     return up_vecs
 
@@ -511,9 +538,10 @@ def _calc_up_vecs(ctilt,ltilt):
 # MBA and RMBA functions (including thermal models)
 ########################################################################
 
-def grav1d_padded(xtopo,topo,zlev,rho):
+
+def grav1d_padded(xtopo, topo, zlev, rho):
     """Calculate the gravity anomaly due to adensity contrast across topography, along a line.
-     
+
     This function uses the method from Parker and Blakely:
 
         R. L. Parker (1972). The Rapid Calculation of Potential Anomalies,
@@ -532,26 +560,27 @@ def grav1d_padded(xtopo,topo,zlev,rho):
 
     :returns: gravity anomaly in mgal.
     """
-    G = 6.673*1e-8;
-    grav = 2*np.pi*G*rho;
+    G = 6.673*1e-8
+    grav = 2*np.pi*G*rho
     baselev = np.mean(topo)  # mean topography for baseline
 
-    dx = (xtopo[-1]-xtopo[0])/(len(xtopo)-1)  # spacing of coordinates, must be constant
+    # spacing of coordinates, must be constant
+    dx = (xtopo[-1]-xtopo[0])/(len(xtopo)-1)
     nx = len(xtopo)
 
-    wing = np.ones(2*len(topo))   ###*** extra padding
+    wing = np.ones(2*len(topo))  # *** extra padding
 
     # extend or mirror the profile
-    padtopo = np.append(topo[0]*wing,np.append(topo,topo[-1]*wing))
-    #padtopo = np.append(baselev*wing,np.append(topo,baselev*wing))
-    #padtopo = np.append(topo,topo[::-1])
+    padtopo = np.append(topo[0]*wing, np.append(topo, topo[-1]*wing))
+    # padtopo = np.append(baselev*wing,np.append(topo,baselev*wing))
+    # padtopo = np.append(topo,topo[::-1])
     nxt = len(padtopo)
     mfx = (nxt/2.) + 1
 
     k = (2*np.pi)/(nxt*dx)  # calculate wavenumbers
     k2 = k**2
-    xi1 = np.arange(1,mfx+1)
-    xi = np.append(xi1,xi1[-2:0:-1])
+    xi1 = np.arange(1, mfx+1)
+    xi = np.append(xi1, xi1[-2:0:-1])
     xxk = (xi-1)*(xi-1)*k2
     kwn1 = np.sqrt(xxk[:nxt])
 
@@ -560,7 +589,7 @@ def grav1d_padded(xtopo,topo,zlev,rho):
 
     npower = 5
     SUMtopo = copy(Ftopo)
-    for ip in range(2,npower+1):  # summation per eq. 11.41 in Blakely
+    for ip in range(2, npower+1):  # summation per eq. 11.41 in Blakely
         Ftopo = np.fft.fft(padtopo**ip)
         Ftopo = Ftopo*(kwn1**(ip-1))/factorial(ip)
 
@@ -573,7 +602,8 @@ def grav1d_padded(xtopo,topo,zlev,rho):
 
     return anom
 
-def grav2d_folding(X,Y,Z,dx,dy,drho=0.6,dz=6000,ifold=1,npower=5):
+
+def grav2d_folding(X, Y, Z, dx, dy, drho=0.6, dz=6000, ifold=1, npower=5):
     """
     Parker [1972] method for calculating gravity from 2D topographic surface with a density contrast.
 
@@ -637,48 +667,48 @@ def grav2d_folding(X,Y,Z,dx,dy,drho=0.6,dz=6000,ifold=1,npower=5):
     mfy2 = mfy*2
 
     # the important part:
-        # (1) compute wavenumbers
-        # (2) transform topography with fft
-        # (3) sum over powers with those wavenumbers
-        # (4) upward continue, transform back to space domain, multiply
-        #     by constants
+    # (1) compute wavenumbers
+    # (2) transform topography with fft
+    # (3) sum over powers with those wavenumbers
+    # (4) upward continue, transform back to space domain, multiply
+    #     by constants
 
     # wavenumbers:
-    yj1 = np.arange(1,mfy+1)
-    yj = np.append(yj1,yj1[mfy-2:0:-1])
+    yj1 = np.arange(1, mfy+1)
+    yj = np.append(yj1, yj1[mfy-2:0:-1])
     yyk = (yj-1)*(yj-1)*ky2
 
-    xi1 = np.arange(1,mfx+1)
-    xi = np.append(xi1,xi1[mfx-2:0:-1])
+    xi1 = np.arange(1, mfx+1)
+    xi = np.append(xi1, xi1[mfx-2:0:-1])
     xxk = (xi-1)*(xi-1)*kx2
 
-    kwn1 = np.zeros((nxt,nyt))
+    kwn1 = np.zeros((nxt, nyt))
     for j in range(nyt):
-        kwn1[:,j] = np.sqrt(xxk + yyk[j])
+        kwn1[:, j] = np.sqrt(xxk + yyk[j])
 
     kwn1 = kwn1.T
 
     # fold the data
     if ifold == 1:
-        Z = np.vstack((Z,np.flipud(Z)))  # fold in X
-        Z = np.hstack((Z,np.fliplr(Z)))  # fold in Y
+        Z = np.vstack((Z, np.flipud(Z)))  # fold in X
+        Z = np.hstack((Z, np.fliplr(Z)))  # fold in Y
 
     # first power
     data = np.copy(Z)
     data = np.fft.fft2(data)
-    data[0,0] = 0
+    data[0, 0] = 0
 
     # sum over the other powers
     csum = np.copy(data)  # for adding summation terms
     fact = 1
-    for i in range(2,npower+1):
+    for i in range(2, npower+1):
         fact = fact*i
         data = np.copy(Z)**i
         data = np.fft.fft2(data)
 
         data = data*(kwn1**(i-1))/fact
-        k,l = np.where(kwn1 == 0)
-        data[k,l] = 0
+        k, l = np.where(kwn1 == 0)
+        data[k, l] = 0
 
         csum = csum + np.copy(data)
 
@@ -687,11 +717,12 @@ def grav2d_folding(X,Y,Z,dx,dy,drho=0.6,dz=6000,ifold=1,npower=5):
     data = csum*grav*np.exp(-zlev*kwn1)
 
     data = np.fft.ifft2(data)
-    sdata = np.real(data[:ny,:nx])  # back in the spatial domain
+    sdata = np.real(data[:ny, :nx])  # back in the spatial domain
 
     return sdata
 
-def glayer(rho,dx,dy,z1,z2):
+
+def glayer(rho, dx, dy, z1, z2):
     """
     Calculate the gravity contribution from a layer of equal thickness with
     an inhomogenous density distribution in x and y (homogeneous in z)
@@ -710,28 +741,29 @@ def glayer(rho,dx,dy,z1,z2):
     G = 6.673e-11
     grav = 2*np.pi*G
 
-    ny,nx = rho.shape
+    ny, nx = rho.shape
     dkx = 2*np.pi/(nx*dx)
     dky = 2*np.pi/(ny*dy)
 
     ifrho = np.fft.fft2(rho)  # take 2D fft of densities
 
-    crho = np.empty((ny,nx),dtype=complex)
+    crho = np.empty((ny, nx), dtype=complex)
     for j in range(nx):
         for i in range(ny):
-            kx,ky = _kvalue(i,j,nx,ny,dkx,dky)
+            kx, ky = _kvalue(i, j, nx, ny, dkx, dky)
             k = np.sqrt(kx**2 + ky**2)
             if k == 0:
-                crho[i,j] = 0
+                crho[i, j] = 0
             else:
-                crho[i,j] = ifrho[i,j]*grav*(np.exp(-k*z1)-np.exp(-k*z2))/k
+                crho[i, j] = ifrho[i, j]*grav*(np.exp(-k*z1)-np.exp(-k*z2))/k
 
     grho = np.fft.ifft2(crho)
     grho = np.real(grho)*si2mg*km2m
 
     return grho
 
-def _kvalue(i,j,nx,ny,dkx,dky):
+
+def _kvalue(i, j, nx, ny, dkx, dky):
     """
     Get wavenumber coordinates of one element of a rectangular grid
 
@@ -753,10 +785,11 @@ def _kvalue(i,j,nx,ny,dkx,dky):
         ky = (i)*dky
     else:
         ky = (i-ny)*dky
-    return kx,ky
+    return kx, ky
 
-def therm_halfspace(x,z,u=0.01,Tm=1350,time=False,rhom=3300,rhow=1000,\
-                    a=3.e-5,k=1.e-6):
+
+def therm_halfspace(x, z, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
+                    a=3.e-5, k=1.e-6):
     """Calculate thermal structure for a half space model.
 
     Reference:
@@ -782,8 +815,8 @@ def therm_halfspace(x,z,u=0.01,Tm=1350,time=False,rhom=3300,rhow=1000,\
     """
 
     To = 0  # surface temperature [K]
-    #a = 6.e-5  # coeff of thermal expansion [m^2/sec]  # used for SCARF calcs (???)
-    #k = 2.e-6  # thermal diffusivity [m^2/sec]
+    # a = 6.e-5  # coeff of thermal expansion [m^2/sec]  # used for SCARF calcs (???)
+    # k = 2.e-6  # thermal diffusivity [m^2/sec]
 
     secyr = 365.25*24*3600  # seconds per year
 
@@ -792,20 +825,20 @@ def therm_halfspace(x,z,u=0.01,Tm=1350,time=False,rhom=3300,rhow=1000,\
     elif not time:
         x = abs(x)/(u/secyr)  # convert m to sec
 
-    X,Z = np.meshgrid(x,z)  # grid up x,z pairs
+    X, Z = np.meshgrid(x, z)  # grid up x,z pairs
 
     # mantle temperature
     T = To + (Tm-To) * erf(Z/(2*(k*X)**.5))
 
     # seafloor subsidence
-    W = ((2*rhom*a*(Tm-To))/(rhom-rhow))* \
-        (((k*X[0,:])/(np.pi))**.5)
+    W = ((2*rhom*a*(Tm-To))/(rhom-rhow)) * \
+        (((k*X[0, :])/(np.pi))**.5)
 
     return T, W
 
 
-def therm_Z(x,T,u=0.01,Tm=1350,time=False,rhom=3300,rhow=1000,\
-            a=3.e-5,k=1.e-6):
+def therm_Z(x, T, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
+            a=3.e-5, k=1.e-6):
     """Calculate depth to an isotherm for a half-space cooling model.
 
     :param x: vector of across-axis distance [m] OR plate age [Myr]
@@ -833,13 +866,14 @@ def therm_Z(x,T,u=0.01,Tm=1350,time=False,rhom=3300,rhow=1000,\
 
     Z = 2*np.sqrt((k*x))*erfcinv((T-Tm)/(To-Tm))
 
-    W = ((2*rhom*a*(Tm-To))/(rhom-rhow))* \
+    W = ((2*rhom*a*(Tm-To))/(rhom-rhow)) * \
         (((k*x)/(np.pi))**.5)
 
     return Z, W
 
-def therm_plate(x,z,u=0.01,zL0=100.e3,Tm=1350,time=False,rhom=3300,rhow=1000,\
-                a=3.e-5,k=1.e-6):
+
+def therm_plate(x, z, u=0.01, zL0=100.e3, Tm=1350, time=False, rhom=3300, rhow=1000,
+                a=3.e-5, k=1.e-6):
     """Calculate thermal structure for the plate cooling model.  
 
     Reference:
@@ -864,12 +898,11 @@ def therm_plate(x,z,u=0.01,zL0=100.e3,Tm=1350,time=False,rhom=3300,rhow=1000,\
     :returns: gridded temperature over (x,z), seafloor subsidence in meters
     """
 
-
     To = 0  # surface temperature [K]
 
     secyr = 365.25*24*3600  # seconds per year
 
-    X,Z = np.meshgrid(x,z)
+    X, Z = np.meshgrid(x, z)
 
     if time:
         t = X*1e6*secyr  # convert Myr to sec
@@ -878,33 +911,41 @@ def therm_plate(x,z,u=0.01,zL0=100.e3,Tm=1350,time=False,rhom=3300,rhow=1000,\
 
     Tterm2 = (2/np.pi)*np.exp(-k*(np.pi**2)*t/(zL0**2))*np.sin(np.pi*Z/zL0)
     Tterm3 = (1/np.pi)*np.exp(-4*k*(np.pi**2)*t/(zL0**2))*np.sin(2*np.pi*Z/zL0)
-    Tterm4 = (2/np.pi/3)*np.exp(-9*k*(np.pi**2)*t/(zL0**2))*np.sin(3*np.pi*Z/zL0)
-    Tterm5 = (2/np.pi/4)*np.exp(-16*k*(np.pi**2)*t/(zL0**2))*np.sin(4*np.pi*Z/zL0)
-    Tterm6 = (2/np.pi/5)*np.exp(-25*k*(np.pi**2)*t/(zL0**2))*np.sin(5*np.pi*Z/zL0)
-    Tterm7 = (2/np.pi/6)*np.exp(-36*k*(np.pi**2)*t/(zL0**2))*np.sin(6*np.pi*Z/zL0)
-    Tterm8 = (2/np.pi/7)*np.exp(-49*k*(np.pi**2)*t/(zL0**2))*np.sin(7*np.pi*Z/zL0)
-    Tterm9 = (2/np.pi/8)*np.exp(-64*k*(np.pi**2)*t/(zL0**2))*np.sin(8*np.pi*Z/zL0)
-    Tterm10 = (2/np.pi/9)*np.exp(-81*k*(np.pi**2)*t/(zL0**2))*np.sin(9*np.pi*Z/zL0)
-    Tterm11 = (2/np.pi/10)*np.exp(-100*k*(np.pi**2)*t/(zL0**2))*np.sin(10*np.pi*Z/zL0)
+    Tterm4 = (2/np.pi/3)*np.exp(-9*k*(np.pi**2)
+                                * t/(zL0**2))*np.sin(3*np.pi*Z/zL0)
+    Tterm5 = (2/np.pi/4)*np.exp(-16*k*(np.pi**2)
+                                * t/(zL0**2))*np.sin(4*np.pi*Z/zL0)
+    Tterm6 = (2/np.pi/5)*np.exp(-25*k*(np.pi**2)
+                                * t/(zL0**2))*np.sin(5*np.pi*Z/zL0)
+    Tterm7 = (2/np.pi/6)*np.exp(-36*k*(np.pi**2)
+                                * t/(zL0**2))*np.sin(6*np.pi*Z/zL0)
+    Tterm8 = (2/np.pi/7)*np.exp(-49*k*(np.pi**2)
+                                * t/(zL0**2))*np.sin(7*np.pi*Z/zL0)
+    Tterm9 = (2/np.pi/8)*np.exp(-64*k*(np.pi**2)
+                                * t/(zL0**2))*np.sin(8*np.pi*Z/zL0)
+    Tterm10 = (2/np.pi/9)*np.exp(-81*k*(np.pi**2)
+                                 * t/(zL0**2))*np.sin(9*np.pi*Z/zL0)
+    Tterm11 = (2/np.pi/10)*np.exp(-100*k*(np.pi**2)
+                                  * t/(zL0**2))*np.sin(10*np.pi*Z/zL0)
 
-    T = To + (Tm - To)*(Z/zL0 + Tterm2 + Tterm3 + Tterm4 + Tterm5 + Tterm6 + Tterm7 +\
-        Tterm8 + Tterm9 + Tterm10 + Tterm11)
+    T = To + (Tm - To)*(Z/zL0 + Tterm2 + Tterm3 + Tterm4 + Tterm5 + Tterm6 + Tterm7 +
+                        Tterm8 + Tterm9 + Tterm10 + Tterm11)
 
     mantle = np.where(Z > zL0)[0]
     T[mantle] = Tm
 
-    Wterm2 = (4/np.pi**2)*np.exp(-k*(np.pi**2)*t[0,:]/(zL0**2))
-    Wterm3 = (4/(9*np.pi**2))*np.exp(-k*9*(np.pi**2)*t[0,:]/(zL0**2))
-    Wterm4 = (4/(25*np.pi**2))*np.exp(-k*25*(np.pi**2)*t[0,:]/(zL0**2))
+    Wterm2 = (4/np.pi**2)*np.exp(-k*(np.pi**2)*t[0, :]/(zL0**2))
+    Wterm3 = (4/(9*np.pi**2))*np.exp(-k*9*(np.pi**2)*t[0, :]/(zL0**2))
+    Wterm4 = (4/(25*np.pi**2))*np.exp(-k*25*(np.pi**2)*t[0, :]/(zL0**2))
 
     W = ((rhom*a*(Tm-To)*zL0)/(rhom-rhow)) * (1./2 - Wterm2 - Wterm3 - Wterm4)
 
     return T, W
 
 
-def therm_Z_plate_approx(x,T,u=0.01,zL0=100.e3,Tm=1350,time=False,\
-                minz=0,maxz=100e3,zsp=1e2,rhom=3300,rhow=1000,\
-                a=3.e-5,k=1.e-6):
+def therm_Z_plate_approx(x, T, u=0.01, zL0=100.e3, Tm=1350, time=False,
+                         minz=0, maxz=100e3, zsp=1e2, rhom=3300, rhow=1000,
+                         a=3.e-5, k=1.e-6):
     """Calculate approximate depth to an isotherm in the plate cooling model
 
     This is done by calculating a temperature field with a decent z spacing 
@@ -930,15 +971,15 @@ def therm_Z_plate_approx(x,T,u=0.01,zL0=100.e3,Tm=1350,time=False,\
     :returns: depths to isotherms as a function of z: depth[T,x]
     """
 
-    z = np.arange(minz,maxz,zsp)
+    z = np.arange(minz, maxz, zsp)
 
-    Tp,_ = therm_plate(x,z,u=u,zL0=zL0,Tm=Tm,time=time,rhom=rhom,rhow=rhow,\
-                        a=a,k=k)  # calculate the whole temperature field
+    Tp, _ = therm_plate(x, z, u=u, zL0=zL0, Tm=Tm, time=time, rhom=rhom, rhow=rhow,
+                        a=a, k=k)  # calculate the whole temperature field
 
-    ziso = np.zeros((len(T),len(x)))
+    ziso = np.zeros((len(T), len(x)))
     for i in range(len(T)):  # loop isotherms, find depths
         for j in range(len(x)):
-            ziso[i,j] = z[np.argmin(abs(Tp[:,j]-T[i]))]
+            ziso[i, j] = z[np.argmin(abs(Tp[:, j]-T[i]))]
 
     return ziso
 
@@ -946,8 +987,9 @@ def therm_Z_plate_approx(x,T,u=0.01,zL0=100.e3,Tm=1350,time=False,\
 # crustal thickness functions
 ########################################################################
 
-def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
-                        wlarge=45,wsmall=25,back=False):
+
+def crustal_thickness_2D(ur, nx=1000, ny=1, dx=1.3, dy=0, zdown=10, rho=0.4,
+                         wlarge=45, wsmall=25, back=False):
     """
     Downward continuation of gravity to "topographic relief" ie crustal thickness
 
@@ -967,7 +1009,7 @@ def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
     :param wlarge: max wavelength for taper/cutoff, km, default 45
     :param wsmall: min wavelength for taper/cutoff, km, default 25
     :param back: switch for doing reverse tranform if True, default False
-    
+
     :returns: crustal thickness variation in km, (recovered gravity
         if back=True)
     """
@@ -993,7 +1035,7 @@ def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
     kcut1 = 2*np.pi/wlarge
     kcut2 = 2*np.pi/wsmall
     dkcut = kcut2 - kcut1
-    mfx = nx/2 + 1    
+    mfx = nx/2 + 1
     mfy = ny/2 + 1
 
     prod = 1./(nx*ny)  # dimension correction factor
@@ -1007,7 +1049,7 @@ def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
     else:
         kint2 = 0
 
-    kwn1 = np.zeros((nx,ny))  # compute wavenumbers in 2D
+    kwn1 = np.zeros((nx, ny))  # compute wavenumbers in 2D
     for j in range(ny):
         yj = j
         if j > mfy:
@@ -1020,29 +1062,31 @@ def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
                 xi = mfx*2 - i
             xxk = kint1**2 * (xi-1)**2
 
-            kwn1[i,j] = np.sqrt(xxk + yyk)
+            kwn1[i, j] = np.sqrt(xxk + yyk)
 
     # Fourier transform of the gravity residual
-    ur_arr = ur.reshape(nx,ny)  # this was passed as a 1D array even for a 2D problem
+    # this was passed as a 1D array even for a 2D problem
+    ur_arr = ur.reshape(nx, ny)
     ur_arr_ft = np.fft.fft2(ur_arr)  # 2D fft
 
     # apply wavenumbers, taper
     for j in range(ny):
         for i in range(nx):
             wgt = 1
-            if kwn1[i,j] > kcut2:
+            if kwn1[i, j] > kcut2:
                 wgt = 0
-            elif kwn1[i,j] > kcut1 and kwn1[i,j] <= kcut2:
-                t = (kwn1[i,j]-kcut1)/dkcut*np.pi
+            elif kwn1[i, j] > kcut1 and kwn1[i, j] <= kcut2:
+                t = (kwn1[i, j]-kcut1)/dkcut*np.pi
                 wgt = (np.cos(t)+1)/2
 
-            ur_arr_ft[i,j] = ur_arr_ft[i,j]*np.exp(kwn1[i,j]*zdown)*topo1*wgt
+            ur_arr_ft[i, j] = ur_arr_ft[i, j] * \
+                np.exp(kwn1[i, j]*zdown)*topo1*wgt
 
     # inverse Fourier transform
     ur_arr_2 = np.fft.fft2(ur_arr_ft)
 
     # back to vector, correct for dimensions, convert to km
-    ur_arr_2 = ur_arr_2.reshape(-1,1)
+    ur_arr_2 = ur_arr_2.reshape(-1, 1)
     ur_arr_2 = ur_arr_2*prod/1e5
 
     if not back:
@@ -1050,10 +1094,10 @@ def crustal_thickness_2D(ur,nx=1000,ny=1,dx=1.3,dy=0,zdown=10,rho=0.4,\
     elif back:  # reverse the transform and upward continute to check gravity recovery
         for j in range(ny):
             for i in range(nx):
-                ur_arr_ft[i,j] = -ur_arr_ft[i,j]*np.exp(-kwn1[i,j]*zdown)/topo1
+                ur_arr_ft[i, j] = -ur_arr_ft[i, j] * \
+                    np.exp(-kwn1[i, j]*zdown)/topo1
         ur_back = np.fft.fft2(ur_arr_ft)
-        ur_back = ur_back.reshape(-1,1)
+        ur_back = ur_back.reshape(-1, 1)
         ur_back = ur_back*prod*1000+ave
 
-        return ur_arr_2[::-1],ur_back[::-1]
-
+        return ur_arr_2[::-1], ur_back[::-1]

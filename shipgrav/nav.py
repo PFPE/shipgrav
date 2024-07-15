@@ -1,10 +1,11 @@
 import numpy as np
 
 # impulse response of 10th order Taylor series differentiator
-tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6, 0, -5/6, 5/21, -5/84, 5/504, -1/1260]
+tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6,
+         0, -5/6, 5/21, -5/84, 5/504, -1/1260]
 
 
-def ll2en(lon,lat,freq=1):
+def ll2en(lon, lat, freq=1):
     """ Convert time series of geographic position to E/N velocities.
 
     Lon/lat pairs should be at a constant sampling rate. The first and last five 
@@ -16,12 +17,13 @@ def ll2en(lon,lat,freq=1):
     :param freq: frequency of the position data, Hz (default: 1 Hz)
     """
 
-    assert hasattr(lon,'__len__') and hasattr(lat,'__len__'), 'lon and lat must be lists or arrays'
+    assert hasattr(lon, '__len__') and hasattr(
+        lat, '__len__'), 'lon and lat must be lists or arrays'
     assert len(lon) == len(lat), 'lon and lat must be the same length'
     assert len(lon) > 10, 'at least 11 data points required'
 
     a = 6378137.0       # WGS84 semi-major
-    b = 6356752.3142451 # WGS84 semi-minor
+    b = 6356752.3142451  # WGS84 semi-minor
     e2 = 1 - b**2/a**2  # ellipticity**2
 
     # constants for radii of curvature
@@ -29,16 +31,18 @@ def ll2en(lon,lat,freq=1):
     e2term = np.sqrt(1 - e2*sin2lat)
 
     # differentiate lat and lon using 10th order Taylor
-    dlat = np.deg2rad(np.convolve(lat,tay10,'same'))
-    dlon = np.deg2rad(np.convolve(lon,tay10,'same'))
+    dlat = np.deg2rad(np.convolve(lat, tay10, 'same'))
+    dlon = np.deg2rad(np.convolve(lon, tay10, 'same'))
 
     # convert dlon/dlat to east and north velocity, scaled by sampling frequency
     vn = a*(1 - e2)*(dlat/(e2term**3))*freq
     ve = a*dlon*(np.cos(np.deg2rad(lat))/e2term)*freq
 
     # Nan the edges bc they are unreliable
-    vn[:5] = np.nan; vn[-5:] = np.nan
-    ve[:5] = np.nan; ve[-5:] = np.nan
+    vn[:5] = np.nan
+    vn[-5:] = np.nan
+    ve[:5] = np.nan
+    ve[-5:] = np.nan
 
     return vn, ve
 
