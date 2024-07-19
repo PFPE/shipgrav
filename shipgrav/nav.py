@@ -6,15 +6,22 @@ tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6,
 
 
 def latlon_to_EN(lon, lat, freq=1):
-    """ Convert time series of geographic position to E/N velocities.
+    """ Convert a time series of geographic position to E/N velocities.
 
-    Lon/lat pairs should be at a constant sampling rate. The first and last five 
-    values of the output arrays are filled with Nan because the differencing scheme
+    Coordinate time series should be at a constant sampling rate. The first and last five 
+    values of the output arrays will be filled with Nan because the differencing scheme
     has some edge effects.
 
-    :param lon: np.ndarray of longitude points, decimal degrees
-    :param lat: np.ndarray of latitude points, decimal degrees
+    :param lon: longitude points, decimal degrees
+    :type lon: ndarray
+    :param lat: latitude points, decimal degrees
+    :type lat: ndarray
     :param freq: frequency of the position data, Hz (default: 1 Hz)
+    :type freq: float
+
+    :return:
+        - **vn** (*ndarray*) - north velocities, m/s
+        - **ve** (*ndarray*) - east velocities, m/s
     """
 
     assert hasattr(lon, '__len__') and hasattr(
@@ -50,10 +57,15 @@ def latlon_to_EN(lon, lat, freq=1):
 def ENvel_to_course_heading(ve, vn):
     """Calculate velocity and heading from east and north velocities.
 
-    Output heading is in degrees clockwise from N.
+    :param ve: east velocity, m/s
+    :type ve: ndarray
+    :param vn: north velocity, m/s
+    :type vn: ndarray
 
-    :param ve: east velocity
-    :param vn: north velocity
+    :return:
+        - **heading** (*ndarray*) - track heading in degrees clockwise from N
+        - **vel** (*ndarray*) - velocity amplitude, m/s
+
     """
     heading = np.rad2deg(np.arctan2(ve, vn))
     vel = np.sqrt(ve**2 + vn**2)
@@ -64,8 +76,13 @@ def rotate_acceleration_EN_to_cl(heading, accE, accN):
     """Rotate acceleration from East/North to Cross/Long reference frame.
 
     :param heading: heading, in degrees clockwise from N
+    :type heading: ndarray
     :param accE: east acceleration
+    :type accE: ndarray
     :param accN: north acceleration
+    :type accN: ndarray
+
+    :return: **ac, al** (*ndarrays*) - cross and long accelerations
     """
     cosa = np.cos(np.deg2rad(heading))
     sina = np.sin(np.deg2rad(heading))

@@ -14,7 +14,11 @@ def gaussian_filter(x, fl):
     Note that the filter is not applied symmetrically and there is a shift by fl.
 
     :param x: time series data to be filtered.
+    :type x: array_like
     :param fl: length of the filter in # of samples.
+    :type fl: int
+
+    :return: **xfilt** (*ndarray*) - filtered time series x
     """
 
     assert len(x) > fl, 'raw data is shorter than gaussian filter'
@@ -40,6 +44,9 @@ def _gaussian_coeffs(fl):
     """ Calculate a gaussian filter to convolve with things that need filtering.
 
     :param fl: length of the filter in # of samples
+    :type fl: int
+
+    :return: **gauss_prms** (*ndarray*) - filter coefficients
     """
     half_sample = np.floor(.5*fl)
     coeff_len = int(half_sample + 1)
@@ -69,9 +76,12 @@ def decode_dgs_status_bits(stat, key='status'):
 
     Return flags as a dict (for one integer input) or a dataframe (status df input)
 
-    :param stat: status bit, either an integer or a DataFrame with status
-        as one of the columns (labeled by key)
+    :param stat: status bit(s)
+    :type stat: int or pd.DataFrame
     :param key: the DataFrame column for the status bits if input is a DataFrame
+    :type key: string, optional
+
+    :return: **stat** (*dict or pd.DataFrame*) - decoded bits
     """
     # flags from Jasmine's code
     # flags = ['clamp','unclamp','GPSsync','feedback','R1','R2','ADlock','Rcvd',\
@@ -96,11 +106,14 @@ def decode_dgs_status_bits(stat, key='status'):
 
 
 def clean_ini_to_toml(ini_file):
-    """ Read in a .ini file and try to write a toml-compliant file.
+    """ Read in a .ini file and try to rewrite as toml-compliant.
 
     This uses simple, prescriptive regex stuff to (hopefully) clean out
     ini conventions that don't work with toml.
-    It writes out a toml file named by default as ini_file:r.toml
+    It writes out a toml file with the same name as the input, with
+    the extension .ini replaced by .toml
+
+    :param ini_file: path to input ini file
     """
 
     with open(ini_file, 'r') as file:

@@ -7,9 +7,6 @@ from math import factorial
 from scipy.special import erf, erfcinv
 from copy import copy
 
-# TODO longman_tide etc check input formats (list/array, datetimes)
-# TODO crustal thickness - array dimensions and reshapes
-
 # impulse response of 10th order Taylor series differentiator
 tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6,
          0, -5/6, 5/21, -5/84, 5/504, -1/1260]
@@ -24,7 +21,12 @@ def _convert_datetime_tidetime(timestamp):
 
     The reference point is noon on December 31, 1899 per Longman's paper.
 
-    :param timestamp: datetime.datetime
+    :param timestamp: time to convert to century + hour 
+    :type timestamp: datetime.datetime
+
+    :returns: 
+        - **julian century** (*int*) - centuries since reference date, days/36525
+        - **julian_hour** (*float*) - hours since midnight
     """
     origin_time = datetime(1899, 12, 31, 12, 0, 0, tzinfo=timezone.utc)
     dt = timestamp - origin_time
@@ -48,12 +50,21 @@ def longman_tide_prediction(lon, lat, times, alt=0, return_components=False):
     as are all of the constant and variable descriptions.
     Tidal contribution(s) returned are in mGal.
 
-    :param lon: longitude in decimal degrees, positive E, np.ndarray or list
-    :param lat: latitude in decimal degrees, positive N, np.ndarray or list
-    :param times: times for geographic locations, datetime.datetime in np.ndarray or list
+    :param lon: longitude in decimal degrees, positive E
+    :type lon: array_like
+    :param lat: latitude in decimal degrees, positive N
+    :type lat: array_like
+    :param times: times for geographic locations
+    :type times: array_like, datetime.datetime
     :param alt: altitude in meters (0 for sea level, for marine grav)
-    :param return_components: bool; if True, return lunar/solar/total. If False, 
-        return only the total tidal effect.
+    :type alt: array_like
+    :param return_components: if True, return lunar and solar components with total.
+    :type return_components: bool
+
+    :returns:
+        - **g0** (*ndarray*)- total tidal effect in mGal
+        - **gm** (*ndarray*)- lunar tidal effect in mGal (optional, if return_components is True)
+        - **gs** (*ndarray*)- solar tidal effect in mGal (optional, if return_components is True)
     """
 
     assert len(lon) == len(lat), 'lengths of input vectors must be the same'
@@ -170,7 +181,7 @@ def longman_tide_prediction(lon, lat, times, alt=0, return_components=False):
     love = (1 + h2 - 1.5*k2)
     g0 = (gm + gs) * 1e3*love
     if return_components:
-        return gm*1e3*love, gs*1e3*love, g0
+        return g0, gm*1e3*love, gs*1e3*love
     else:
         return g0
 
@@ -180,13 +191,17 @@ def longman_tide_prediction(lon, lat, times, alt=0, return_components=False):
 
 
 def eotvos_full(lon, lat, ht, samp, a=6378137.0, b=6356752.3142):
-    """ Full Eotvos correction in mGals
+    """ Full Eotvos correction in mGals.
 
-    From Harlan 1968, "Eotvos Corrections for Airborne Gravimetry" JGR 73(14)
+    The Eotvos correction is the effect on measured gravity due to horizontal
+    motion over the Earth's surface.
 
-    Modified from matlab script written by Sandra Preaux, NGS, NOAA August 24 2009
+    This formulation is from Harlan (1968), "Eotvos Corrections for Airborne Gravimetry" in
+    *Journal of Geophysical Research*, 73(14), DOI: 10.1029/JB073i014p04675
 
-    components:
+    Implementation modified from matlab script written by Sandra Preaux, NGS, NOAA August 24 2009
+
+    Components of the correction:
 
     * rdoubledot
     * angular acceleration of the reference frame
@@ -194,12 +209,20 @@ def eotvos_full(lon, lat, ht, samp, a=6378137.0, b=6356752.3142):
     * centrifugal
     * centrifugal acceleration of Earth
 
-    :param lon: longitudes in degrees, vector
-    :param lat: latitudes in degrees, vector
-    :param ht: elevation (wrt sea level?), vector
-    :param samp: samplint rate
-    :param a: optional, major axis of ellipsoid (default is WGS84)
-    :param b: optional, minor axis of ellipsoid (default is WGS84)
+    :param lon: longitudes in degrees
+    :type lon: array_like
+    :param lat: latitudes in degrees
+    :type lat: array_like
+    :param ht: elevation (referenced to sea level)
+    :type ht: array_like
+    :param samp: sampling rate
+    :type samp: float
+    :param a: major axis of ellipsoid (default is WGS84)
+    :type a: float, optional
+    :param b: minor axis of ellipsoid (default is WGS84)
+    :type b: float, optional
+
+    :return: **E** (*ndarray*), Eotvos correction in mGal
     """
     We = 0.00007292115    # siderial rotation rate, radians/sec
     mps2mgal = 100000     # m/s/s to mgal
@@ -280,7 +303,11 @@ def free_air_second_order(lat, ht):
     """ 2nd order free-air correction
 
     :param lat: latitude, degrees
+    :type lat: array_like
     :param height: elevation, meters
+    :type height: array_like
+
+    :return: free-air correction, mGal
     """
     s2lat = np.sin(np.deg2rad(lat))**2
 
@@ -291,6 +318,9 @@ def wgs_grav(lat):
     """ Theoretical gravity for WGS84 ellipsoid
 
     :param lat: latitude, degrees
+    :type lat: array_like
+
+    :return: uniform ellipsoid gravity, mGal
     """
     sinsq = np.sin(np.deg2rad(lat))**2
 
@@ -304,19 +334,31 @@ def wgs_grav(lat):
 
 
 def calc_cross_coupling_coefficients(faa_in, vcc_in, ve_in, al_in, ax_in, level_in, times=None, samplerate=1):
-    """ Calculate cross-coupling coefficients from some data via ordinary linear regression
+    """ Calculate cross-coupling coefficients from FAA via ordinary linear regression
+
+    The cross-coupling coefficients are returned in `model`, in the `params` attribute
 
     :param faa_in: free air anomaly, filtered
+    :type faa_in: array_like
     :param vcc_in: vcc monitor
+    :type vcc_in: array_like
     :param ve_in: ve monitor
+    :type ve_in: array_like
     :param al_in: al monitor
+    :type al_in: array_like
     :param ax_in: ax monitor
-    :param level_in: tilt/leveling correction, which is still slightly mysterious. 
+    :type ax_in: array_like
+    :param level_in: tilt/leveling correction, often negligible. 
         Use a vector of zeros to ignore this component.
-    :param times: optional, vector of timestamps to use for dividing the data
-        into continuous sections
-    :param samplerate: optional, used with times to determine where there
-        are large sampling gaps in the data
+    :type level_in: array_like
+    :param times: timestamps to use for dividing the data into continuous sections
+    :type times: array_like, floats, optional
+    :param samplerate: used with times to detect large sampling gaps in the data
+    :type samplerate: float, optional
+
+    :return: 
+        - **df** (*pd.DataFrame*)- double-differenced and filtered monitors and gravity
+        - **model** (*statsmodels.OLS*)- linear regression model
     """
 
     end_inds = np.array([len(faa_in),])  # just the one
@@ -409,11 +451,16 @@ def calc_cross_coupling_coefficients(faa_in, vcc_in, ve_in, al_in, ax_in, level_
 
 
 def center_diff(y, n, samp):
-    """ numerical derivatives, central difference of nth order
+    """ Numerical derivatives, central difference of nth order
 
-    :param y: data vector
-    :param n: order, should be 1 or 2
+    :param y: data to differentiate
+    :type y: array_like
+    :param n: order, either 1 or 2
+    :type n: int
     :param samp: sampling rate
+    :type samp: float
+
+    :return: 1st or 2nd order derivative of **y**
     """
     if n == 1:
         return (y[2:] - y[:-2])*(samp/2)
@@ -427,8 +474,28 @@ def center_diff(y, n, samp):
 def up_vecs(dt, g, cacc, lacc, on_off, cper, cdamp, lper, ldamp):
     """ Calculate 3xN matrix of platform up-pointing vectors in (cross, long) coordinates
 
-    The on_off flag can be used to zero out accelerations for times when
-    the meter is clamped or otherwise not operational.
+    :param dt: sampling interval in seconds
+    :type dt: float
+    :param g: latitudinal correction term (2nd orfer FA plus ellipsoid)
+    :type g: array_like
+    :param cacc: cross-axis acceleration
+    :type cacc: array_like
+    :param lacc: long-axis acceleration
+    :type lacc: array_like
+    :param on_off: flag for "good" data - can be used to zero out data points when the meter
+        is clamped or otherwise not operational
+    :type on_off: array_like
+    :param cper: platform period in seconds for the cross-axis tilt filter
+    :type cper: float
+    :param cdamp: platform damping term for cross-axis tilt filter
+    :type cdamp: float
+    :param lper: platform period in seconds for the long-axis tilt filter
+    :type lper: float
+    :param ldamp: platform damping term for long-axis tilt filter
+    :type ldamp: float
+
+    :return: **up_vecs** (*3xN ndarray*) - cross, long, and up vectors for the platform
+
     """
     # clean out any nans in the accelerations
     cacc[np.isnan(cacc)] = 0
@@ -459,11 +526,16 @@ def up_vecs(dt, g, cacc, lacc, on_off, cper, cdamp, lper, ldamp):
 
 
 def _tilt_filter(per, dt, damp=False):
-    """ Filter coefficitnes for L&R platform tilt computation
+    """ Filter coefficients for L&R platform tilt computation
 
     :param per: platform period, seconds
+    :type per: float
     :param dt: sample increment, seconds
-    :param damp: optional, platform damping; default = sqrt(2)/2
+    :type dt: float
+    :param damp: platform damping term (default: sqrt(2)/2)
+    :type damp: float, optional
+
+    :return: filter coefficients
     """
 
     if not damp:
@@ -500,7 +572,11 @@ def _calc_up_vecs(ctilt, ltilt):
     """ calculate 3xN matrix of platform up-vectors in (cross, long, up) coordinates
 
     :param ctilt: cross-axis tilt angles in radians
+    :type ctilt: array_like
     :param ltilt: long-axis tilt angles in radians
+    :type ltilt: array_like
+
+    :return: **up_vecs** (*3xN ndarray*) - (cross, long, up) for platform
     """
 
     # get increments, assuming initial is 0
@@ -542,6 +618,8 @@ def _calc_up_vecs(ctilt, ltilt):
 def grav1d_padded(xtopo, topo, zlev, rho):
     """Calculate the gravity anomaly due to a density contrast across topography, along a line.
 
+    The input (1D) topography is padded on both ends to reduce edge effects
+
     This function uses the method from Parker and Blakely:
 
         R. L. Parker (1972). The Rapid Calculation of Potential Anomalies,
@@ -554,11 +632,15 @@ def grav1d_padded(xtopo, topo, zlev, rho):
        Translated to Python in 1D with padding by Hannah Mark, 6 October 2017
 
     :param xtopo: x coordinates of the surface in meters (must be equally spaced)
-    :param topo: z coordinates of the surface in meters.
+    :type xtopo: array_like
+    :param topo: z coordinates of the surface in meters
+    :type ztopo: array_like
     :param zlev: vertical distance for upwards continuation in meters.
+    :type zlev: float
     :param rho: density contrast across the topography in kg/m^3.
+    :type rho: float
 
-    :returns: gravity anomaly in mgal.
+    :return: **anom** (*ndarray*) - gravity anomaly in mgal
     """
     G = 6.673*1e-8
     grav = 2*np.pi*G*rho
@@ -603,24 +685,35 @@ def grav1d_padded(xtopo, topo, zlev, rho):
     return anom
 
 
-def grav2d_folding(X, Y, Z, dx, dy, drho=0.6, dz=6000, ifold=1, npower=5):
+def grav2d_folding(X, Y, Z, dx, dy, drho=0.6, dz=6000, ifold=True, npower=5):
     """
     Parker [1972] method for calculating gravity from 2D topographic surface with a density contrast.
+
+    The `ifold` option enables folding the input topography grid in x and y to mitigate edge effects
 
     .. Modified from parker.m by Mark Behn, which was in turn modified from
        parker.f by Ban-Yuan Kuo and Jian Lin.
 
-    :param X: vector of X coords
-    :param Y: vector of Y coords
-    :param Z: matrix of Z coords
-    :param dx: grid spacing, for wavenumbers [km]
-    :param dy: grid spacing, for wavenumbers [km]
+    :param X: vector of N X coordinates
+    :type X: ndarray
+    :param Y: vector of M Y coordinates
+    :type Y: ndarray
+    :param Z: matrix of Z coordinates
+    :type Z: ndarray, NxM
+    :param dx: x grid spacing, for wavenumbers [km]
+    :type dx: float
+    :param dy: y grid spacing, for wavenumbers [km]
+    :type dy: float
     :param drho: density contrast across surface. Ex: 1.7 for water to crust, 0.6 for crust to mantle
+    :type drho: float
     :param dz: offset depth for layer interface, added to baselevel for upward continuation [m]
-    :param ifold: folding. 1=fold, else=don't fold (default: 1)
+    :type dz: float
+    :param ifold: switch for folding
+    :type ifold: bool
     :param npower: power of Taylor series expansion (default: 5)
+    :type npower: int
 
-    :returns: summed gravity anomaly in mgal
+    :return: (*ndarray*) gravity anomaly in mgal
     """
     nx = len(X)  # size of the grid
     ny = len(Y)
@@ -641,7 +734,7 @@ def grav2d_folding(X, Y, Z, dx, dy, drho=0.6, dz=6000, ifold=1, npower=5):
     dz = dz*100
 
     # to fold or not to fold--
-    if ifold == 1:
+    if ifold:
         nxt = nx*2
         nyt = ny*2
     else:
@@ -730,10 +823,13 @@ def grav2d_layer_variable_density(rho, dx, dy, z1, z2):
     .. Based on glayer.m by Mark Behn
 
     :param rho: 2D density distribution [kg/m^3]
+    :type rho: ndarray
     :param dx,dy: sample intervals in km
+    :type dx,dy: float
     :param z1,z2: depth to top and bottom of layer in km (both >0)
+    :type z1,z2: float
 
-    :returns: gravity, probably in mgal
+    :return: (*ndarray*) gravity in mgal
     """
 
     si2mg = 1e5
@@ -767,10 +863,14 @@ def _kvalue(i, j, nx, ny, dkx, dky):
     """
     Get wavenumber coordinates of one element of a rectangular grid
 
-    inputs:
     :param i,j: indices in ky,kx directions
+    :type i,j: int
     :param nx,ny: dimensions of the grid in the ky,kx directions
+    :type nx,ny: int
     :param dkx,dky: sample intervals in kx,ky directions
+    :type dkx,dky: float
+
+    :return: **kx, ky** (*float*) - x and y wavenumbers at (i, j)
     """
 
     nyqx = nx/2+1
@@ -790,7 +890,7 @@ def _kvalue(i, j, nx, ny, dkx, dky):
 
 def therm_halfspace(x, z, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
                     a=3.e-5, k=1.e-6):
-    """Calculate thermal structure for a half space model.
+    """Calculate thermal structure for a half space cooling model.
 
     Reference:
 
@@ -802,16 +902,26 @@ def therm_halfspace(x, z, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
        Translated to Python + modded for plate age by Hannah Mark, October 2017
 
     :param x: vector of across-axis distance (meters) OR of plate ages (Myr)
+    :type x: array_like
     :param z: vector of depth (meters)
+    :type z: array_like
     :param u: spreading rate (m/yr)
-    :param time: bool switch for x vs age input: if ages, set time=True
+    :type u: float
+    :param time: switch for x vs age input: if ages, set time=True
         and u will be ignored.
-    :param rhom: **optional** mantle density, kg/m^3, default 3300
-    :param rhow: **optional** water density, kg/m^3, default 1000
-    :param a: **optional** coefficient of thermal expansion, m^2/sec, default 3e-5
-    :param k: **optional** thermal diffusivity, m^2/sec, default 1e-6
+    :type time: bool
+    :param rhom: mantle density, kg/m^3, default 3300
+    :type rhom: float, optional
+    :param rhow: water density, kg/m^3, default 1000
+    :type rhow: float, optional
+    :param a: coefficient of thermal expansion, m^2/sec, default 3e-5
+    :type a: float, optional
+    :param k: thermal diffusivity, m^2/sec, default 1e-6
+    :type k: float, optional
 
-    :returns: gridded temperature over (x,z), seafloor subsidence (meters)
+    :return:
+        - **T** (*ndarray*) - gridded temperature over (x, z)
+        - **W** (*ndarray*) - seafloor subsidence in meters
     """
 
     To = 0  # surface temperature [K]
@@ -842,17 +952,28 @@ def therm_Z_halfspace(x, T, u=0.01, Tm=1350, time=False, rhom=3300, rhow=1000,
     """Calculate depth to an isotherm for a half-space cooling model.
 
     :param x: vector of across-axis distance [m] OR plate age [Myr]
+    :type x: array_like
     :param T: isotherm of choice [K]
+    :type T: float
     :param u: spreading rate [m/yr], default 0.01
-    :param time: bool switch for x vs age input - if time=True,
+    :type u: float
+    :param time: switch for x vs age input - if time=True,
         u is ignored, default False
-    :param Tm: **optional** mantle potential temperature [K], default 1350
-    :param rhom: **optional** mantle density, kg/m^3, default 3300
-    :param rhow: **optional** water density, kg/m^3, default 1000
-    :param a: **optional** coefficient of thermal expansion, m^2/sec, default 3e-5
-    :param k: **optional** thermal diffusivity, m^2/sec, default 1e-6
+    :type time: bool
+    :param Tm: mantle potential temperature [K], default 1350
+    :type Tm: float, optional
+    :param rhom: mantle density, kg/m^3, default 3300
+    :type rhom: float, optional
+    :param rhow: water density, kg/m^3, default 1000
+    :type rhow: float, optional
+    :param a: coefficient of thermal expansion, m^2/sec, default 3e-5
+    :type a: float, optional
+    :param k: thermal diffusivity, m^2/sec, default 1e-6
+    :type k: float, optional
 
-    :returns: depth of isotherm below seafloor [m], seafloor subsidence [m]
+    :returns:
+        - **Z** (*ndarray*) - depth of this isotherm below the seafloor in meters
+        - **W** (*ndarray*) - seafloor subsidence in meters
     """
 
     To = 0  # surface temperature [K]
@@ -885,17 +1006,29 @@ def therm_plate(x, z, u=0.01, zL0=100.e3, Tm=1350, time=False, rhom=3300, rhow=1
        Translated to Python + modded for plate age by Hannah Mark, October 2017
 
     :param x: vector of across-axis distance (meters) OR plate age (Myr)
+    :type x: array_like
     :param z: vector of depth (meters)
+    :type z: array_like
     :param u: spreading rate (m/yr), default 0.01
+    :type u: float
     :param zL0: plate thickness (meters), default 100e3
-    :param time: bool switch for x vs age input. If time=True, u is ignored.
+    :type zL0: float
+    :param time: switch for x vs age input. If time=True, u is ignored.
+    :type time: bool
     :param Tm: mantle potential temperature (K), default 1350
-    :param rhom: **optional** mantle density, kg/m^3, default 3300
-    :param rhow: **optional** water density, kg/m^3, default 1000
-    :param a: **optional** coefficient of thermal expansion, m^2/sec, default 3e-5
-    :param k: **optional** thermal diffusivity, m^2/sec, default 1e-6
+    :type Tm: float, optional
+    :param rhom: mantle density, kg/m^3, default 3300
+    :type rhom: float, optional
+    :param rhow: water density, kg/m^3, default 1000
+    :type rhow: float, optional
+    :param a: coefficient of thermal expansion, m^2/sec, default 3e-5
+    :type a: float, optional
+    :param k: thermal diffusivity, m^2/sec, default 1e-6
+    :type k: float, optional
 
-    :returns: gridded temperature over (x,z), seafloor subsidence in meters
+    :returns:
+        - **T** (*ndarray*) - gridded temperature over (x, z)
+        - **W** (*ndarray*) - seafloor subsidence in meters
     """
 
     To = 0  # surface temperature [K]
@@ -955,20 +1088,33 @@ def therm_Z_plate(x, T, u=0.01, zL0=100.e3, Tm=1350, time=False,
     T) so the whole temperature field is only calculated one time.
 
     :param x: array of across-axis distance (meters) OR plate age (Myr)
-    :param T: array of temperatures for which you want isotherms (K)
+    :type x: array_like
+    :param T: temperatures for which you want isotherms (K)
+    :type T: array_like
     :param u: spreading rate (m/yr), default 0.01
+    :type u: float
     :param zL0: plate thickness (meters), default 100e3
+    :type zL0: float
     :param Tm: mantle potential temperature (K), default 1350
-    :param time: bool switch for x vs age input. If time=True, u is ignored.
+    :type Tm: float, optional
+    :param time: switch for x vs age input. If time=True, u is ignored.
+    :type time: bool
     :param minz: minimum z for calculating T field (meters), default 0
+    :type minz: float
     :param maxz: maximum z (meters), default 100e3
+    :type maxz: float
     :param zps: z spacing for grid (meters), default 1e3
-    :param rhom: **optional** mantle density, kg/m^3, default 3300
-    :param rhow: **optional** water density, kg/m^3, default 1000
-    :param a: **optional** coefficient of thermal expansion, m^2/sec, default 3e-5
-    :param k: **optional** thermal diffusivity, m^2/sec, default 1e-6
+    :type zps: float
+    :param rhom:  mantle density, kg/m^3, default 3300
+    :type rhom: float, optional
+    :param rhow: water density, kg/m^3, default 1000
+    :type rhow: float, optional
+    :param a: coefficient of thermal expansion, m^2/sec, default 3e-5
+    :type a: float, optional
+    :param k: thermal diffusivity, m^2/sec, default 1e-6
+    :type k: float, optional
 
-    :returns: depths to isotherms as a function of z: depth[T,x]
+    :returns: **ziso** (*ndarray*) - depths to isotherms, z(T,x)
     """
 
     z = np.arange(minz, maxz, zsp)
@@ -993,25 +1139,36 @@ def crustal_thickness_2D(ur, nx=1000, ny=1, dx=1.3, dy=0, zdown=10, rho=0.4,
     """
     Downward continuation of gravity to "topographic relief" ie crustal thickness
 
-    This can be used in 2D, theoretically, but also works for a single line
+    This can be used in 2D, but also works for a single line
     given ny=1 (which is the default)
 
     .. Written by Hannah Mark (MIT/WHOI), October 2017
        Modeled on down_2d.f by Jian Lin (WHOI)
 
     :param ur: residual gravity anomaly, mgal
+    :type ur: array_like
     :param nx: number of points in x direction, default 1000
+    :type nx: int
     :param ny: number of points in y direction, default 1 (>1 for 2D)
+    :type ny: int
     :param dx: spacing between x points, km, default 1.3
+    :type dx: float
     :param dy: spacing between y points, km, default 0 (>0 for 2D)
+    :type dy: float
     :param zdown: downward continuation depth, km, default 10
+    :type zdown: float
     :param rho: density difference crust to mantle, g/cm^3, default 0.4
+    :type rho: float
     :param wlarge: max wavelength for taper/cutoff, km, default 45
+    :type wlarge: float
     :param wsmall: min wavelength for taper/cutoff, km, default 25
-    :param back: switch for doing reverse tranform if True, default False
+    :type wsmall: float
+    :param back: switch for doing reverse tranform
+    :type back: bool
 
-    :returns: crustal thickness variation in km, (recovered gravity
-        if back=True)
+    :returns:
+        - **crustal thickness** (*ndarray*) - thickness variation in km
+        - **recovered gravity** (*ndarray*) - back-calculated RMBA, (optional, if back=True)
     """
     assert wlarge > wsmall, 'wlarge must be larger than wsmall'
 

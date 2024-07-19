@@ -24,17 +24,21 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
     also an option to override that by setting the talker kwarg.
     Navigation data is re-interpolated to the given sampling rate.
 
-    This function returns a pandas.DataFrame with time series of 
-    geographic coordinates and corresponding timestamps.
-
-    :param ship: name of the ship, string
-    :param pathlist: list of paths to navigation files (.GPS), strings
+    :param ship: name of the ship
+    :type ship: string
+    :param pathlist: paths to navigation files (.GPS)
+    :type pathlist: list, strings
     :param sampling: sampling rate to interpolate to, default 1 Hz
-    :param talker: optional override for talker, string. Default behavior is
+    :type sampling: float
+    :param talker: nav talker. Default behavior is
         to use talker from database.toml if ship is listed there.
-    :param ship_function: optional user-supplied function for reading from nav files.
+    :type talker: string, optional
+    :param ship_function: user-supplied function for reading from nav files.
         This function should return arrays of lon, lat, and timestamps.
         Look at _navcoords() and navdate_Atlantis() (and similar functions) for examples.
+    :type ship_function: function, optional
+
+    :returns: (*pd.DataFrame*) time series of geographic coordinates and timestamps
     """
     # read info on talkers for various ships
     moddir = os.path.dirname(__file__)
@@ -281,7 +285,7 @@ def _navdate_Ride(allnav, talker):
 
 
 def _navcoords(allnav, talker):
-    """Extract longitude and latitude from standard talker strings.
+    """Extract longitude and latitude from standard(?) talker strings.
     """
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
@@ -340,14 +344,15 @@ def _clean_180cross(gps_nav):
 def read_bgm_rgs(fp, ship):
     """Read BGM gravity from RGS files.
 
-    RGS seems to be a standard format, but so far I've only seen
-    examples from Atlantis and NBP so there may variations elsewhere.
+    RGS is supposedly a standard format; is consistent between Atlantis 
+    and NBP at least.
 
-    This function returns a pandas.DataFrame with timestamps, raw gravity,
-    and geographic coordinates.
+    :param fp: RGS filepath(s)
+    :type fp: string, or list of strings
+    :param ship: ship name
+    :type ship: string
 
-    :param fp: RGS filepaths, string or list of strings
-    :param ship: ship name, string
+    :returns: (*pd.DataFrame*) timestamps, raw gravity, and geographic coordinates
     """
     supported_ships = ['Atlantis', 'NBP']
     if ship not in supported_ships:
@@ -375,12 +380,18 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None):
     to convert counts from the raw files to raw gravity. Known scale
     factors are listed in database.toml.
 
-    :param fp: BGM raw filepath(s), string or list of strings
-    :param ship: ship name, string
-    :param scale: optional, give BGM counts scaling factor outside of database.toml
+    :param fp: BGM raw filepath(s)
+    :type fp: string or list of strings
+    :param ship: ship name
+    :type ship: string
+    :param scale: BGM counts scaling factor to override database.toml
+    :type scale: float, optional
     :param ship_function: user-supplied function for reading/parsing BGM raw files.
         The function should return a pandas.DataFrame with timestamps and counts.
         Look at _bgmserial_Atlantis() and similar functions for examples.
+    :type ship_function: function, optional
+
+    :return: (*pd.DataFrame*) timestamps and calibrated raw gravity values
     """
     moddir = os.path.dirname(__file__)
     import tomli as tm
@@ -455,7 +466,7 @@ def _bgmserial_Revelle(path):
 
 
 def _despike_bgm_serial(dat, thresh=8000):
-    """Clean out counts spikes in bgm data based on a threshold delta(counts).
+    """Clean out counts spikes in BGM data based on a threshold delta(counts).
 
     This sometimes works and sometimes doesn't; use at your own risk.
     """
@@ -484,11 +495,16 @@ def _despike_bgm_serial(dat, thresh=8000):
 def read_dgs_laptop(fp, ship, ship_function=None):
     """Read DGS 'laptop' file(s), usually written as .dat files.
 
-    :param fp: filepath(s), string or list of strings
-    :param ship: ship name, string
-    :param ship_function: optional, user-defined function for reading a file.
+    :param fp: filepath(s)
+    :type fp: string or list of strings
+    :param ship: ship name
+    :type ship: string
+    :param ship_function: user-defined function for reading a file.
         The function should return a pandas.DataFrame. See _dgs_laptop_general()
         for an example.
+    :type ship_function: function, optional
+
+    :return: *(pd.DataFrame)* DGS output time series
     """
     if type(fp) == str:
         fp = [fp,]  # listify
@@ -543,8 +559,12 @@ def read_dgs_raw(fp, ship, scale_ccp=True):
     says, though some things may vary by vessel so if this doesn't
     work that's probably why.
 
-    :param fp: filepath(s), string or list of strings
-    :param ship: ship name, string
+    :param fp: filepath(s)
+    :type fp: string or list of strings
+    :param ship: ship name
+    :type ship: string
+
+    :return: (*pd.DataFrame*) DGS output time series
     """
 
     if type(fp) == str:
@@ -636,8 +656,13 @@ def read_other_stuff(yaml_file, data_file, tag):
     one or more MRUs
 
     :param yaml_file: path to YAML file with info for this feed
+    :type yaml_file: string
     :param data_file: path to data file to be read
+    :type data_file: string
     :param tag: the name of the feed, with or without the $ prepended
+    :type tag: string
+
+    :return: (*pd.DataFrame*) time series from specified feed
     """
 
     if tag.startswith('$'):

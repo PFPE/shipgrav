@@ -9,6 +9,8 @@ DGS gravimeters output two types of files: serial, or 'raw' files; and 'laptop' 
 Installation
 ------------
 
+shipgrav can be installed from the source files (`available on github <https://github.com/PFPE/shipgrav>`_) using ``pip``.
+
 shipgrav's dependencies are
 
 * Python 3.9+
@@ -44,7 +46,7 @@ shipgrav consists of the modules ``io``, ``nav``, ``grav``, and ``utils``, along
 Data directories
 ----------------
 
-You can organize your data however you like; shipgrav does not care as long as you tell it where to look. However, to run the example scripts, you will need to download some data and ensure that the scripts are pointed to the paths where you put that data. A shell script is provided in ``example-scripts/`` to help download and organize the data.
+You can organize your data however you like; shipgrav does not care as long as you tell it where to look. However, to run the example scripts, you will need to download some data and ensure that the scripts are pointed to the paths where you put that data. A shell script ``download_data.sh`` is provided in ``example-scripts/`` to help download and organize the data.
 
 Ties and bias
 -------------
@@ -56,7 +58,7 @@ Navigation data
 
 Which navigation data should you use to process gravimeter data?
 
-In an ideal world, the DGS meter pulls navigation info from the ship's feed and synchronizes it perfectly with acquisition such that the output files have the correct geographic coordinates in them at the start. In practice, this synchronization doesn't always work as expected (see ``example-scripts/dgs_raw_comp.py`` for a case where the serial files do not have GPS info). So, we like to take the timestamped navigation data directly from the ship's feed and match up the DGS timestamps to obtain more accurate coordinates.
+In an ideal world, the gravimeter pulls navigation info from the ship's feed and synchronizes it perfectly with acquisition such that the output files have the correct geographic coordinates in them at the start. In practice, this synchronization doesn't always work as expected (see ``example-scripts/dgs_raw_comp.py`` for a case where the serial files do not have GPS info). So, we like to take the timestamped navigation data directly from the ship's feed and match up the gravimeter timestamps to obtain more accurate coordinates.
 
 The database file included in shipgrav lists the navigation talkers that we expect are good to use for specific UNOLS vessels. Find the files that contain those feeds, and you should be able to read in timestamped coordinates from them.
 
@@ -124,6 +126,8 @@ Help!
 **Other file reading errors:** shipgrav does its best to read a variety of file formats from UNOLS gravimeters, but we can't read files that we don't know enough about ahead of time. In some cases, a file cannot be read because we don't yet know how to pass the file to the correct parsing function. Most primary i/o functions in shipgrav have an option where users can supply their own file-parsing function, so one option is to write such a function (following the examples in shipgrav for known vessel file formats) and plug that in via the appropriate kwarg (usually named ``ship_function``). You can also send an example file and information to PFPE so that we can update shipgrav.
 
 **The anomaly I've calculated looks really weird:** a good first step is to compare your (lowpass filtered) FAA to satellite data (e.g., `Sandwell et al. 2014 <https://doi.org/10.1126/science.1258213>`_). If that looks very different, you can start checking whether the data is being read properly; whether the sample rate of the data is consistent with your expectations; whether there are anomalous spikes or dropouts in the data that need to be cleaned out; and whether the corrections used to calculate the FAA seem to have reasonable magnitudes.
+
+**I want to use shipgrav, but my data is not from a UNOLS vessel:** the functions and workflows in shipgrav are entirely adaptable to use with data from other sources. You will need to determine the data format for your gravimeter files, and write or adapt a function to read that data. There are examples in the ``io`` module. If you have raw data files, you will also need to know the calibration constants and apply those. Once the data have been read (and calibrated), you should be able to apply all of the other shipgrav functions for processing. 
 
 **I'm going to sea and want to be able to access this documentation offline:** this is all auto-generated from text included in the shipgrav source files! So one option is just to go read those (the main part of the documentation is in ``shipgrav/__init__.py``). To view it as a nice webpage, you can build the documentation locally using ``sphinx``. Install ``sphinx`` in your conda environment, run the command ``make html`` in the ``docs/`` directory, and then open ``docs/_build/html/index.html`` in your browser to view the documentation.
 
