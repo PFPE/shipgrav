@@ -92,6 +92,9 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
             elif ship == 'Ride':
                 lon, lat = _navcoords(allnav, talker)
                 timest = _navdate_Ride(allnav, talker)
+            elif ship == 'Langseth':
+                lon, lat = _navcoords(allnav, talker)
+                timest = _navdate_Langseth(allnav, talker)
             else:  # in theory we never get to this option, but catch just in case
                 print(
                     'R/V %s not yet supported for nav read; must supply read function' % ship)
@@ -284,6 +287,21 @@ def _navdate_Ride(allnav, talker):
     return timest
 
 
+def _navdate_Langseth(allnav, talker):
+    """Extract datetime info from Langseth nav files (MGL-seapath.*).
+    """
+    inav = [talker in s for s in allnav]  # find lines of file with this talker
+    subnav = allnav[inav]  # select only those lines
+    N = len(subnav)
+    # array for timestamps, as datetime objects
+    timest = np.empty(N, dtype=datetime)
+
+    for i in range(N):
+        date = subnav[i].split(talker)[0].split('seapath')[1].split('\t')[1]
+        timest[i] = datetime.strptime(date,'%Y:%j:%H:%M:%S.%f').replace(tzinfo=timezone.utc)
+    return timest
+
+
 def _navcoords(allnav, talker):
     """Extract longitude and latitude from standard(?) talker strings.
     """
@@ -472,7 +490,7 @@ def _bgmserial_Langseth(path):
     vc* file format
     """
     def count(x): return (int(x.split(':')[-1]))
-    def dtime(x): return (datetime.strptime(x,'%Y:%j:%H:%M:%S.%f'))
+    def dtime(x): return (datetime.strptime(x,'%Y:%j:%H:%M:%S.%f').replace(tzinfo=timezone.utc))
     dat = pd.read_fwf(path, names=['date_time', 'counts'], usecols=(1,2),
                       converters={'counts': count,'date_time': dtime})
     return dat

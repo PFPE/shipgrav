@@ -11,6 +11,7 @@ Thompson = 'INGGA'
 NBP = 'GPGGA'
 Ride = 'INGGA'
 Revelle = 'GPGGA'
+Langseth = 'INGGA'
 
 [BGM-scale]
 Atlantis = 4.994070552
