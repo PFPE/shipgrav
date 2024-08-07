@@ -422,6 +422,8 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None):
                 dat = _bgmserial_Thompson(path)
             elif ship == 'Revelle':
                 dat = _bgmserial_Revelle(path)
+            elif ship == 'Langseth':
+                dat = _bgmserial_Langseth(path)
             else:   # shouldn't end up here, but just in case:
                 print('BGM serial read not yet supported for R/V %s' % ship)
                 return -999
@@ -462,6 +464,17 @@ def _bgmserial_Revelle(path):
                       parse_dates=[0], converters={'counts': count})
     ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
     dat['date_time'] = ndt
+    return dat
+
+def _bgmserial_Langseth(path):
+    """Read a BGM raw (serial) file from Langseth.
+
+    vc* file format
+    """
+    def count(x): return (int(x.split(':')[-1]))
+    def dtime(x): return (datetime.strptime(x,'%Y:%j:%H:%M:%S.%f'))
+    dat = pd.read_fwf(path, names=['date_time', 'counts'], usecols=(1,2),
+                      converters={'counts': count,'date_time': dtime})
     return dat
 
 

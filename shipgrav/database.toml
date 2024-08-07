@@ -16,6 +16,7 @@ Revelle = 'GPGGA'
 Atlantis = 4.994070552
 Thompson = 5.003353363
 Revelle = 4.99980755
+Langseth = 5.0
 
 [dgs-stuff]
 calibration_factor = 8388607
