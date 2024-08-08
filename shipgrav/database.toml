@@ -4,6 +4,7 @@ Thompson = {'dgs'=969527.3497, 'bgm'=855489.8}
 Revelle = {'dgs'=968888.6465, 'bgm'=855240.81987}
 NBP = {'dgs'=968634.2514, 'bgm'=-999}
 Ride = {'dgs'=968895.7718, 'bgm'=-999}
+Langseth = {'dgs'=-999, 'bgm'=854974.4}
 
 [nav-talkers]
 Atlantis = 'GPGGA'
