@@ -57,6 +57,6 @@ Figure sizes can be customized by adding an optional second parameter:
 
 # Acknowledgements
 
-The development of shipgrav was supported by the Potential Field Pool Equipment (PFPE) facility under NSF-OCE [GRANT NUMBER]. Functions for calculating thermal structure were adapted from scripts provided by Mark Behn.
+The development of shipgrav was supported by the Potential Field Pool Equipment (PFPE) facility, which is funded by the National Science Foundation under grants OCE-2234277 and OCE-1824508; and by the Office of Naval Research under DURIP grant N00014-23-1-2475. Functions for calculating thermal structure were adapted from scripts provided by Mark Behn.
 
 # References
