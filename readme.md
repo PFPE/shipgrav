@@ -15,7 +15,7 @@ pyyaml
 To run the example scripts, you will also need matplotlib.
 
 ## Installation
-shipgrav can be installed using `pip`. Detailed instructions are in the [documentation](https://shipgrav.readthedocs.io/).
+shipgrav can be installed from PyPI using `pip`. Detailed instructions are in the [documentation](https://shipgrav.readthedocs.io/).
 
 ## Documentation and usage
 The shipgrav documentation is available online at [shipgrav.readthedocs.io](https://shipgrav.readthedocs.io/). It can also be accessed offline by building the contents of the `docs` folder using sphinx.

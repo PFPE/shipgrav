@@ -9,7 +9,11 @@ DGS gravimeters output two types of files: serial, or 'raw' files; and 'laptop' 
 Installation
 ------------
 
-shipgrav can be installed from the source files (`available on github <https://github.com/PFPE/shipgrav>`_) using ``pip``.
+shipgrav can be installed from `PyPI <https://pypi.org/project/shipgrav/>`_ using ``pip``. we recommend using an environment management tool like `conda <https://anaconda.org>`_. An exemplary set of commands to make a conda enviroment with shipgrav would be: ::
+
+    conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml matplotlib
+    conda activate shipgrav
+    pip install shipgrav
 
 shipgrav's dependencies are
 
@@ -22,14 +26,7 @@ shipgrav's dependencies are
 * pyyaml
 * matplotlib (optional, needed to run some of the example scripts)
 
-To install shipgrav, we recommend using an environment management tool like `conda <https://anaconda.org>`_. An exemplary set of commands to make a conda enviroment with shipgrav would be: ::
-
-    conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml matplotlib
-    conda activate shipgrav
-    cd /path/to/put/source/files
-    git clone https://github.com/PFPE/shipgrav.git
-    cd shipgrav/
-    pip install .
+The example scripts are `available on github <https://github.com/PFPE/shipgrav>`_. They are not packaged with the PyPI package and must be downloaded separately.
 
 Modules and files
 -----------------
