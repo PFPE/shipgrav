@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shipgrav"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
     {name = "Hannah F. Mark", email = "hmark@whoi.edu"},
 ]
