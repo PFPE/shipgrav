@@ -11,7 +11,7 @@ Installation
 
 shipgrav can be installed from `PyPI <https://pypi.org/project/shipgrav/>`_ using ``pip``. we recommend using an environment management tool like `conda <https://anaconda.org>`_. An exemplary set of commands to make a conda enviroment with shipgrav would be: ::
 
-    conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml matplotlib
+    conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml matplotlib geographiclib
     conda activate shipgrav
     pip install shipgrav
 
@@ -25,6 +25,7 @@ shipgrav's dependencies are
 * tomli
 * pyyaml
 * matplotlib (optional, needed to run some of the example scripts)
+* geographiclib (optional, needed to run one of the example scripts)
 
 The example scripts are `available on github <https://github.com/PFPE/shipgrav>`_. They are not packaged with the PyPI package and must be downloaded separately.
 
