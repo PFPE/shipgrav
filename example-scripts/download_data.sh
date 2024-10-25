@@ -41,9 +41,9 @@ cd temp
 # TN400 data: BGM3 and nav
 # https://doi.org/10.7284/151470 (grav)
 # https://doi.org/10.7284/151457 (nav)
-curl -X GET https://service.rvdata.us/data/cruise/TN400/fileset/151470 --output TN400-grav.tar.gz
+curl -L -X GET https://service.rvdata.us/data/cruise/TN400/fileset/151470 --output TN400-grav.tar.gz
 tar -xvzf TN400-grav.tar.gz
-curl -X GET https://service.rvdata.us/data/cruise/TN400/fileset/151457 --output TN400-nav.tar.gz
+curl -L -X GET https://service.rvdata.us/data/cruise/TN400/fileset/151457 --output TN400-nav.tar.gz
 tar -xvzf TN400-nav.tar.gz
 for e in 20220313 20220314; do
 mv TN400/151470/data/*$e* ../data/Thompson/TN400/gravimeter/BGM3/serial
@@ -58,11 +58,11 @@ rm TN400-nav.tar.gz
 # https://doi.org/10.7284/157179 (grav)
 # https://doi.org/10.7284/157188 (nav)
 # https://doi.org/10.7284/157177 (mru)
-curl -X GET https://service.rvdata.us/data/cruise/SR2312/fileset/157179 --output SR2312-grav.tar.gz
+curl -L -X GET https://service.rvdata.us/data/cruise/SR2312/fileset/157179 --output SR2312-grav.tar.gz
 tar -xvzf SR2312-grav.tar.gz
-curl -X GET https://service.rvdata.us/data/cruise/SR2312/fileset/157188 --output SR2312-nav.tar.gz
+curl -L -X GET https://service.rvdata.us/data/cruise/SR2312/fileset/157188 --output SR2312-nav.tar.gz
 tar -xvzf SR2312-nav.tar.gz
-curl -X GET https://service.rvdata.us/data/cruise/SR2312/fileset/157177 --output SR2312-mru.tar.gz
+curl -L -X GET https://service.rvdata.us/data/cruise/SR2312/fileset/157177 --output SR2312-mru.tar.gz
 tar -xvzf SR2312-mru.tar.gz
 for e in 16 17 18 19 20; do
 mv SR2312/157179/data/*_202306$e*.dat ../data/Ride/SR2312/gravimeter/DGS
