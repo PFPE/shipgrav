@@ -169,7 +169,7 @@ def _navdate_Atlantis(allnav, talker):
 
     for i in range(N):
         pre = subnav[i].split(talker)[0]
-        date = re.findall('NAV (\d{4})/(\d{2})/(\d{2})', pre)[0]
+        date = re.findall(r'NAV (\d{4})/(\d{2})/(\d{2})', pre)[0]
         year = int(date[0])  # year
         mon = int(date[1])  # month
         day = int(date[2])  # day
@@ -191,7 +191,7 @@ def _navdate_NBP(allnav, talker):
 
     for i in range(N):
         pre = subnav[i].split(talker)[0]
-        date = re.findall('(\d{2})\+(\d{2,3}):.*', pre)[0]
+        date = re.findall(r'(\d{2})\+(\d{2,3}):.*', pre)[0]
         # year (NBP didn't exist before 2000 so this is ok)
         year = '20' + date[0]
         doy = date[1]  # doy
@@ -216,7 +216,7 @@ def _navdate_Thompson(allnav, talker):
 
     for i in range(N):
         pre = subnav[i].split(talker)[0]
-        date = re.findall('(\d{2})/(\d{2})/(\d{4}),*', pre)[0]
+        date = re.findall(r'(\d{2})/(\d{2})/(\d{4}),*', pre)[0]
         year = int(date[2])
         mon = int(date[0])
         day = int(date[1])
@@ -247,8 +247,8 @@ def _navdate_Revelle(allnav, talker):
         for k in range(inds[i]-1, j, -1):  # step backwards toward the last talker line
             before = allnav[k]
             # date is at the start of this line
-            if re.match('(\d{4})-(\d{2})-(\d{2})T*', before):
-                date = re.findall('(\d{4})-(\d{2})-(\d{2})T*', before)[0]
+            if re.match(r'(\d{4})-(\d{2})-(\d{2})T*', before):
+                date = re.findall(r'(\d{4})-(\d{2})-(\d{2})T*', before)[0]
                 year = int(date[0])
                 mon = int(date[1])
                 day = int(date[2])
@@ -269,12 +269,12 @@ def _navdate_Ride(allnav, talker):
 
     for i in range(N):
         if talker == 'INGGA':  # on Ride, uses posix timestamps
-            date = re.findall('(\d+(\.\d*)?) \$%s' % talker, subnav[i])[0]
+            date = re.findall(r'(\d+(\.\d*)?) \$%s' % talker, subnav[i])[0]
             timest[i] = datetime.fromtimestamp(
                 float(date[0]), tzinfo=timezone.utc)
         elif talker == 'GPGGA':  # includes time only with date, unlike other GPGGAs
             date = re.findall(
-                '(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d.*?)Z', subnav[i])[0]
+                r'(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d.*?)Z', subnav[i])[0]
             year = int(date[0])
             mon = int(date[1])
             day = int(date[2])
@@ -383,9 +383,8 @@ def read_bgm_rgs(fp, ship):
     dats = []
     for path in fp:
         dat = pd.read_csv(path, delimiter=' ', names=['date', 'time', 'grav', 'lat', 'lon'],
-                          usecols=(1, 2, 3, 11, 12), parse_dates=[[0, 1]])
-        ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
-        dat['date_time'] = ndt
+                          usecols=(1, 2, 3, 11, 12))
+        dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
         dats.append(dat)
 
     return pd.concat(dats, ignore_index=True)
@@ -456,10 +455,8 @@ def _bgmserial_Atlantis(path):
     def count(x): return (
         int(x.split(':')[-1]))  # function to parse counts column
     dat = pd.read_csv(path, delimiter=' ', names=['date', 'time', 'counts'], usecols=(1, 2, 4),
-                      parse_dates=[[0, 1]], converters={'counts': count})
-    ndt = [e.tz_localize(timezone.utc)
-           for e in dat['date_time']]  # timestamps cannot be naive
-    dat['date_time'] = ndt
+                      converters={'counts': count})
+    dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
     return dat
 
 
@@ -468,9 +465,8 @@ def _bgmserial_Thompson(path):
     """
     def count(x): return (int(x.split(' ')[0].split(':')[-1]))
     dat = pd.read_csv(path, delimiter=',', names=['date', 'time', 'counts'],
-                      parse_dates=[[0, 1]], converters={'counts': count})
-    ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
-    dat['date_time'] = ndt
+                    converters={'counts': count})
+    dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
     return dat
 
 
@@ -575,10 +571,8 @@ def _dgs_laptop_Thompson(path):
     """
     dat = pd.read_csv(path, delimiter=',', names=['date', 'time', 'rgrav', 've', 'vcc',
                                                   'al', 'ax', 'lat', 'lon'],
-                      usecols=(0, 1, 3, 12, 13, 14, 15, 16, 17),
-                      parse_dates=[[0, 1]])
-    ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
-    dat['date_time'] = ndt
+                      usecols=(0, 1, 3, 12, 13, 14, 15, 16, 17))
+    dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
     return dat
 
 
@@ -746,4 +740,13 @@ def read_other_stuff(yaml_file, data_file, tag):
         except KeyError:
             pass
 
-    return df.apply(pd.to_numeric, errors='ignore'), col_info
+    def numeric(col):
+        try:
+            return pd.to_numeric(col)
+        except:
+            return col
+
+    for ckey in df.columns:     # to_numeric by column so errors for datetimes are skipped
+        df[ckey] = df[ckey].apply(numeric)  # slower than applying to whole df, but avoids errors
+
+    return df, col_info
