@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shipgrav"
-version = "1.0.2"
+version = "1.0.3"
 authors = [
     {name = "Hannah F. Mark", email = "hmark@whoi.edu"},
 ]
@@ -29,4 +29,4 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-examples = ["matplotlib"]
+examples = ["matplotlib", "geographiclib"]

@@ -1,3 +1,18 @@
+2024-10-25  Hannah F Mark  <hmark@whoi.edu>
+
+    * update pkg_resources (deprecated from 3.13) to importlib.resources for test suite
+    * fix download_data.sh curl by adding -L to follow R2R links
+    * fix SyntaxWarning for regular expressions in io.py by making raw strings
+    * fix DeprecationWarning for parse_dates with nested sequences, sub in pd.to_datetime
+    * fix FutureWarning for to_numeric, apply by column instead of whole DataFrame
+    * add geographiclib as dependency for RMBA example script (used for line extension)
+    * set tests to run on push (keeping scheduled ones too)
+    * add Python 3.13 to the test matrix, simplify the os matrix logic
+    * update codecov action to v4 for nodejs version
+    * update CONTRIBUTORS -> to markdown, with info on who did what prior to github upload
+    * fix indexing in one part of RMBA example script for future deprecation of chained assignment
+    * add detail to contributor guidelines
+
 2024-07-15  Hannah F Mark  <hmark@whoi.edu>
 
     * PEP8 reformat, typos
