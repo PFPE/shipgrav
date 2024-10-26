@@ -142,7 +142,7 @@ B = firwin(taps, wn, window='blackman')  # approx equivalent to matlab fir1
 ffaa = filtfilt(B, 1, data['faa'])
 
 # embed our FAA in the tracked line (everything else remains tracked)
-track['faa'].iloc[n_ext+taps:-n_ext-taps] = ffaa[taps:-taps]
+track.loc[n_ext+taps:n_ext+taps+len(ffaa[taps:-taps])-1,'faa'] = ffaa[taps:-taps]
 # NOTE you may want to check your embedded FAA for large jumps at the ends
 # and smooth them out into the gridded data. Not bothering here because
 # the jumps aren't *too* big* and also we don't care that much about the
