@@ -142,4 +142,6 @@ Contributing
 
 Do you have ideas for making this software better? Go ahead and `raise an issue <https://github.com/PFPE/shipgrav/issues>`_ on the github page or, if you're a savvy Python programmer, submit a pull request. You can also email PFPE at pfpe-interal(at)whoi.edu.
 
+If you raise an issue on github, please include as much detail as possible, such as the text of error messages. If there are no visible errors but you think the code is behaving oddly, provide a description of what the code is doing and what you think it *should* be doing instead. PFPE may ask for additional details or copies of data files in order to reproduce and diagnose an issue.
+
 """

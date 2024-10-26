@@ -22,3 +22,7 @@ The shipgrav documentation is available online at [shipgrav.readthedocs.io](http
 
 ## Contributing to shipgrav
 Please do! If you have ideas for how to make shipgrav better, you can raise an issue on github or contact PFPE.
+
+If you raise an issue on github, please include as much detail as possible about any errors you are encountering or any proposed enhancements to the code. Include the text of any error messages, and if the issue is unexpected behavior from the code without any visible error messages, describe both what the code is doing and what you think it *should* be doing instead. PFPE may ask for additional details and/or copies of data files in order to reproduce and diagnose an issue.
+
+Additions or enhancements to the code are also welcome. Contributors are invited to fork the repository and submit pull requests for the maintainers to review.
