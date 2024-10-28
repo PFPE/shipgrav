@@ -14,10 +14,14 @@ from glob import glob
 
 
 class gravDataTestCase(unittest.TestCase):
+    @property
+    def ex_files(self):
+        return __file__.rsplit("/", 1)[0] + "/ex_files"
+
     def setUp(self):  # actions to take before running each test: load in some test data
         # test data is part of one of the files supplied by DGS (original file is 30M/86400
         # lines for 24 hr; we cut to 1 hr?)
-        gfiles = glob('ex_files/DGStest*.dat')
+        gfiles = glob(f'{self.ex_files}/DGStest*.dat')
         data = sgi.read_dgs_laptop(gfiles, 'DGStest')
         data['tsec'] = [e.timestamp()
                         for e in data['date_time']]  # get posix timestamps
