@@ -5,6 +5,7 @@ ccp coeffs are not objectively good because the time series is short but it work
 Not bothering with the leveling correction here because exactly how to calculate it
 is left to the user
 """
+import os
 import unittest
 from glob import glob
 
@@ -17,12 +18,12 @@ import shipgrav.nav as sgn
 class gravDataTestCase(unittest.TestCase):
     @property
     def ex_files(self):
-        return __file__.rsplit("/", 1)[0] + "/ex_files"
+        return __file__.rsplit(os.sep, 1)[0] + os.sep + "ex_files"
 
     def setUp(self):  # actions to take before running each test: load in some test data
         # test data is part of one of the files supplied by DGS (original file is 30M/86400
         # lines for 24 hr; we cut to 1 hr?)
-        gfiles = glob(f'{self.ex_files}/DGStest*.dat')
+        gfiles = glob(f'{self.ex_files}'+os.sep+'DGStest*.dat')
         data = sgi.read_dgs_laptop(gfiles, 'DGStest')
         data['tsec'] = [e.timestamp()
                         for e in data['date_time']]  # get posix timestamps
