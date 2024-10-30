@@ -1,13 +1,14 @@
-import numpy as np
-from pandas import read_csv
-import shipgrav.grav as sgg
-import matplotlib.pyplot as plt
-from geographiclib.geodesic import Geodesic
-from scipy.signal import firwin, filtfilt
-from scipy.interpolate import interp1d
-from glob import glob
 import os
 import sys
+from glob import glob
+
+import matplotlib.pyplot as plt
+import numpy as np
+import shipgrav.grav as sgg
+from geographiclib.geodesic import Geodesic
+from pandas import read_csv
+from scipy.interpolate import interp1d
+from scipy.signal import filtfilt, firwin
 
 ########################################################################
 # Example script for calculating the mantle Bouger anomaly (MBA) and

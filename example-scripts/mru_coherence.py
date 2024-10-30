@@ -1,16 +1,17 @@
+import os
+import sys
+from glob import glob
+
+import matplotlib.pyplot as plt
 import numpy as np
 import shipgrav.grav as sgg
-import shipgrav.nav as sgn
 import shipgrav.io as sgi
+import shipgrav.nav as sgn
 import shipgrav.utils as sgu
 import tomli as tm
 from pandas import concat, to_datetime
-from glob import glob
 from scipy.interpolate import interp1d
-from scipy.signal import firwin, filtfilt, coherence
-import matplotlib.pyplot as plt
-import os
-import sys
+from scipy.signal import coherence, filtfilt, firwin
 
 ########################################################################
 # Example script for reading DGS laptop data and MRUs from an R/V Ride

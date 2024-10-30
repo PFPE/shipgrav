@@ -6,11 +6,12 @@ Not bothering with the leveling correction here because exactly how to calculate
 is left to the user
 """
 import unittest
+from glob import glob
+
 import numpy as np
 import shipgrav.grav as sgg
 import shipgrav.io as sgi
 import shipgrav.nav as sgn
-from glob import glob
 
 
 class gravDataTestCase(unittest.TestCase):

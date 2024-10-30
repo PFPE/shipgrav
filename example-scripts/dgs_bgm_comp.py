@@ -1,14 +1,15 @@
-import numpy as np
-import shipgrav.grav as sgg
-import shipgrav.nav as sgn
-import shipgrav.io as sgi
-import tomli as tm
-from glob import glob
-from scipy.interpolate import interp1d
-from scipy.signal import firwin, filtfilt
-import matplotlib.pyplot as plt
 import os
 import sys
+from glob import glob
+
+import matplotlib.pyplot as plt
+import numpy as np
+import shipgrav.grav as sgg
+import shipgrav.io as sgi
+import shipgrav.nav as sgn
+import tomli as tm
+from scipy.interpolate import interp1d
+from scipy.signal import filtfilt, firwin
 
 ########################################################################
 # Example script for reading and lightly processing DGS laptop data

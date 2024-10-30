@@ -1,11 +1,12 @@
-import numpy as np
-from scipy.signal import lfilter, firwin
-from pandas import DataFrame
-from statsmodels.api import OLS, add_constant
+from copy import copy
 from datetime import datetime, timezone
 from math import factorial
+
+import numpy as np
+from pandas import DataFrame
+from scipy.signal import firwin, lfilter
 from scipy.special import erf, erfcinv
-from copy import copy
+from statsmodels.api import OLS, add_constant
 
 # impulse response of 10th order Taylor series differentiator
 tay10 = [1/1260, -5/504, 5/84, -5/21, 5/6,

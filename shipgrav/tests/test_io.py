@@ -5,6 +5,7 @@ but for each overall read function it reads a snippet of an example file
 and checks that the values in key columns are correct
 """
 import unittest
+
 import shipgrav.io as sgi
 
 

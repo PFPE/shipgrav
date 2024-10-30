@@ -2,8 +2,9 @@
 Tests for shipgrav.nav
 """
 import unittest
-import shipgrav.nav as sgn
+
 import numpy as np
+import shipgrav.nav as sgn
 
 
 class navTestCase(unittest.TestCase):

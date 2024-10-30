@@ -2,6 +2,7 @@
 Tests for shipgrav.grav
 """
 import unittest
+
 import numpy as np
 import shipgrav.grav as sgg
 

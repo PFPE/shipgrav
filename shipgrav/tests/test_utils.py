@@ -2,8 +2,9 @@
 Tests for shipgrav.utils
 """
 import unittest
-import shipgrav.utils as sgu
+
 import numpy as np
+import shipgrav.utils as sgu
 
 
 class utilsTestCase(unittest.TestCase):

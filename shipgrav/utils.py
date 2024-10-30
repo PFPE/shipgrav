@@ -1,7 +1,8 @@
-import numpy as np
-from datetime import datetime
-from pandas import Series
 import re
+from datetime import datetime
+
+import numpy as np
+from pandas import Series
 
 # TODO gaussian filter doesn't *need* time array
 

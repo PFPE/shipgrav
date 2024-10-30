@@ -1,18 +1,19 @@
-import numpy as np
-import shipgrav.grav as sgg
-import shipgrav.nav as sgn
-import shipgrav.io as sgi
-import shipgrav.utils as sgu
-import tomli as tm
-from glob import glob
-from scipy.interpolate import interp1d
-from scipy.signal import firwin, filtfilt
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-from matplotlib.backend_bases import MouseEvent
-from shutil import rmtree
 import os
 import sys
+from glob import glob
+from shutil import rmtree
+
+import matplotlib.pyplot as plt
+import numpy as np
+import shipgrav.grav as sgg
+import shipgrav.io as sgi
+import shipgrav.nav as sgn
+import shipgrav.utils as sgu
+import tomli as tm
+from matplotlib.backend_bases import MouseEvent
+from matplotlib.gridspec import GridSpec
+from scipy.interpolate import interp1d
+from scipy.signal import filtfilt, firwin
 
 ########################################################################
 # Example script for picking out segments of gravimeter data from an

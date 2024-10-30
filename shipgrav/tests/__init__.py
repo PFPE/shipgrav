@@ -2,9 +2,9 @@
 Tests for shipgrav
 """
 
+import importlib.resources as importlib_resources
 import sys
 import unittest
-import importlib.resources as importlib_resources
 
 
 def run():

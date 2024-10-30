@@ -1,11 +1,12 @@
-import numpy as np
-import pandas as pd
-from datetime import datetime, timezone
-import yaml
 import mmap
-import sys
 import os
 import re
+import sys
+from datetime import datetime, timezone
+
+import numpy as np
+import pandas as pd
+import yaml
 
 # TODO need a fix for places where we cross the international date line (read_nav)
 # TODO check pandas versions for datetime parsing (eg RGS read)

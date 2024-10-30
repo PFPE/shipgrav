@@ -1,13 +1,14 @@
-import numpy as np
-import shipgrav.io as sgi
-import shipgrav.grav as sgg
-import shipgrav.nav as sgn
-import tomli as tm
-from scipy.signal import firwin, filtfilt
-import matplotlib.pyplot as plt
-from glob import glob
 import os
 import sys
+from glob import glob
+
+import matplotlib.pyplot as plt
+import numpy as np
+import shipgrav.grav as sgg
+import shipgrav.io as sgi
+import shipgrav.nav as sgn
+import tomli as tm
+from scipy.signal import filtfilt, firwin
 
 ########################################################################
 # Example script using data from TN400 to illustrate how cross-
