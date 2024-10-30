@@ -1,11 +1,12 @@
 name: tests
 on:
   push:
+    branches:
+      - main
   #workflow_dispatch:
   pull_request:
     branches:
-      # only branches from forks which have the form 'user:branch-name'
-      - '**:**'
+      - main
   schedule:
     - cron:  '42 0 * * 6'
 jobs:
