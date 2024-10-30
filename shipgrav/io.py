@@ -1,7 +1,6 @@
 import mmap
 import os
 import re
-import sys
 from datetime import datetime, timezone
 
 import numpy as np
@@ -49,7 +48,7 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
     nav_str = info['nav-talkers']
 
     # check to make sure we have some way to read nav data for this ship
-    if ship not in nav_str.keys() and ship_function == None:
+    if ship not in nav_str.keys() and ship_function is None:
         print('R/V %s not yet supported for nav read; must supply read function' % ship)
         return -999
 
@@ -378,7 +377,7 @@ def read_bgm_rgs(fp, ship):
         print('R/V %s not supported for RGS read yet' % ship)
         return -999
 
-    if type(fp) == str:
+    if type(fp) is str:
         fp = [fp,]  # make a list if only one path is given
 
     dats = []
@@ -427,7 +426,7 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None):
         else:
             scale = sc_fac[ship]
 
-    if type(fp) == str:
+    if type(fp) is str:
         fp = [fp,]  # make a list if only one path is given
     dats = []
     for path in fp:
@@ -534,12 +533,12 @@ def read_dgs_laptop(fp, ship, ship_function=None):
 
     :return: *(pd.DataFrame)* DGS output time series
     """
-    if type(fp) == str:
+    if type(fp) is str:
         fp = [fp,]  # listify
 
     dats = []
     for path in fp:
-        if ship_function != None:
+        if ship_function is not None:
             dat = ship_function(path)
         else:
             if ship in ['Atlantis', 'Revelle', 'NBP', 'Ride', 'DGStest']:
@@ -593,7 +592,7 @@ def read_dgs_raw(fp, ship, scale_ccp=True):
     :return: (*pd.DataFrame*) DGS output time series
     """
 
-    if type(fp) == str:
+    if type(fp) is str:
         fp = [fp,]  # listify
     dats = []
     for ip, path in enumerate(fp):

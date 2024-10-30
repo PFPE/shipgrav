@@ -580,10 +580,6 @@ def _calc_up_vecs(ctilt, ltilt):
     :return: **up_vecs** (*3xN ndarray*) - (cross, long, up) for platform
     """
 
-    # get increments, assuming initial is 0
-    inc_ct = np.append(ctilt[0], np.diff(ctilt))
-    inc_lt = np.append(ltilt[0], np.diff(ltilt))
-
     # trig functions of tilts
     sc = np.sin(ctilt)
     cc = np.cos(ctilt)
@@ -757,8 +753,6 @@ def grav2d_folding(X, Y, Z, dx, dy, drho=0.6, dz=6000, ifold=True, npower=5):
     # folding frequency:
     mfx = int(nxt/2 + 1)
     mfy = int(nyt/2 + 1)
-    mfx2 = mfx*2
-    mfy2 = mfy*2
 
     # the important part:
     # (1) compute wavenumbers
@@ -1173,8 +1167,6 @@ def crustal_thickness_2D(ur, nx=1000, ny=1, dx=1.3, dy=0, zdown=10, rho=0.4,
     """
     assert wlarge > wsmall, 'wlarge must be larger than wsmall'
 
-    zmin = min(ur)
-    zmax = max(ur)
     ave = np.mean(ur)
 
     # shift to a new reference and convert milligal to gal

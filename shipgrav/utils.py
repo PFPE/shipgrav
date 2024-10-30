@@ -1,8 +1,7 @@
 import re
-from datetime import datetime
 
 import numpy as np
-from pandas import Series
+from pandas import DataFrame
 
 # TODO gaussian filter doesn't *need* time array
 
@@ -91,9 +90,9 @@ def decode_dgs_status_bits(stat, key='status'):
     flags = ['clamp status', 'GPSsync', 'reserved', 'feedback', 'R1', 'R2', 'ADlock', 'ack host',
              'NavMod1', 'NavMod2', 'dgs1_trouble', 'dgs2_trouble', 'GPStime', 'ADsat', 'nemo1', 'nemo2']
 
-    assert type(stat) == int or type(
-        stat) == DataFrame, 'bad input type for status bits'
-    if type(stat) == int:
+    assert type(stat) is int or type(
+        stat) is DataFrame, 'bad input type for status bits'
+    if type(stat) is int:
         bt = format(stat, '016b')
         out = {}
         for i, f in enumerate(flags):
@@ -137,7 +136,7 @@ def clean_ini_to_toml(ini_file):
     lines = text.split('\n')
     for ln in lines:
         if ln.startswith('$'):
-            ln = re.sub('\$', '', ln)  # clean out $ for talkers
+            ln = re.sub(r'\$', '', ln)  # clean out $ for talkers
 
         if ln.startswith('[') or ln.startswith('#') or ln == '':
             fo.write(ln)

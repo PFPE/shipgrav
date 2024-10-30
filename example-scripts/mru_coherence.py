@@ -1,13 +1,10 @@
 import os
-import sys
 from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
 import shipgrav.grav as sgg
 import shipgrav.io as sgi
-import shipgrav.nav as sgn
-import shipgrav.utils as sgu
 import tomli as tm
 from pandas import concat, to_datetime
 from scipy.interpolate import interp1d
