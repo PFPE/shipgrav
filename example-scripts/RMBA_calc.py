@@ -2,11 +2,13 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import shipgrav.grav as sgg
 from geographiclib.geodesic import Geodesic
 from pandas import read_csv
 from scipy.interpolate import interp1d
 from scipy.signal import filtfilt, firwin
+from tqdm import tqdm
 
 ########################################################################
 # Example script for calculating the mantle Bouger anomaly (MBA) and
@@ -14,8 +16,8 @@ from scipy.signal import filtfilt, firwin
 # data from a Ride transit.
 
 # This script works with a file from the interactive line picker script
-# that is located in
-# data/Ride/SR2312/gravimeter/DGS/line-segments/
+# that is provided in a zenodo repository at https://doi.org/10.5281/zenodo.12733929
+# The file is automatically downloaded by this script using pooch
 
 # It is hard-coded to run on a specific example file but could be
 # adjusted (see below)
@@ -60,14 +62,14 @@ from scipy.signal import filtfilt, firwin
 
 ship = 'Ride'
 cruise = 'SR2312'
-root = 'data/'
-seg_path = os.path.join(root, ship, cruise, 'gravimeter/DGS/line-segments')
-# seg_files = np.sort(glob(os.path.join(seg_path,'segment*.dat')))
-# we want to use one particular file that is saved here, which is:
-seg_file = os.path.join(seg_path, 'example_segment_s3_330234-428488.dat')
+
+seg_file = dgs_files = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Ride/SR2312/gravimeter/DGS/line-segments/example_segment_s3_330234-428488.dat']))
 
 # read the data
-data = read_csv(seg_file, parse_dates=[16,])  # fully offshore Newport, OR
+data = read_csv(seg_file[0], parse_dates=[16,])  # fully offshore Newport, OR
 # this segment is a straight-ish line; it has a lot of stations along it
 # where the ship was more or less stationary but that's ok
 
@@ -85,7 +87,7 @@ if l_seg < l_ext:  # but if it's a short segment, just use the segment length on
     l_ext = l_seg
 # calculate distances btwn points to get avg spacing for extensions
 xrng = np.zeros(len(data))
-for i in range(1, len(data)):
+for i in tqdm(range(1, len(data)),desc='calculating ranges'):
     xrng[i] = wgs.Inverse(data.iloc[0]['lat_new'], data.iloc[0]['lon_new'],
                           data.iloc[i]['lat_new'], data.iloc[i]['lon_new'])['s12']
 dx_avg = np.mean(np.diff(xrng))
@@ -94,7 +96,7 @@ n_ext = int(l_ext/dx_avg)
 # get the actual coordinate points for each extended side
 frnt_ext = np.zeros((n_ext, 2))
 back_ext = np.zeros((n_ext, 2))
-for i in range(n_ext):
+for i in tqdm(range(n_ext),desc='calculating extensions'):
     frnt_pt = wgs.Direct(data.iloc[0]['lat_new'],
                          data.iloc[0]['lon_new'], faz10, dx_avg*(i+1))
     back_pt = wgs.Direct(data.iloc[-1]['lat_new'],
@@ -126,7 +128,12 @@ a_lat = np.hstack(
 ########################################################################
 # since we've already pre-tracked the example line, we'll just load in the
 # info here
-track = read_csv(os.path.join(seg_path, 'tracked.llm'), sep='\t',
+
+track_file = dgs_files = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Ride/SR2312/gravimeter/DGS/line-segments/tracked.llm']))
+track = read_csv(track_file[0], sep='\t',
                  names=['lon', 'lat', 'dep', 'faa', 'sed', 'age'])
 # NOTE that if you are working with data from near a coast, line extensions
 # might end up on land. Check for NaN values in your tracked file.
@@ -149,7 +156,7 @@ track.loc[n_ext+taps:n_ext+taps+len(ffaa[taps:-taps])-1,'faa'] = ffaa[taps:-taps
 
 # interpolate everything to an even X spacing (after recalculating total distance)
 xpts_line = np.zeros(len(track))
-for i in range(1, len(track)):
+for i in tqdm(range(1, len(track)),desc='interpolating to even spacing'):
     xpts_line[i] = wgs.Inverse(track.iloc[0]['lat'], track.iloc[0]['lon'],
                                track.iloc[i]['lat'], track.iloc[i]['lon'])['s12']
 # NOTE be careful with the number of points here

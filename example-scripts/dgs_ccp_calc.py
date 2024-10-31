@@ -3,6 +3,7 @@ from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import shipgrav.grav as sgg
 import shipgrav.io as sgi
 import shipgrav.nav as sgn
@@ -12,6 +13,8 @@ from scipy.signal import filtfilt, firwin
 ########################################################################
 # Example script using data from TN400 to illustrate how cross-
 # coupling coefficients are calculated and applied.
+#
+# Data files are downloaded by the script using pooch
 #
 # Read DGS data files
 # (not bothering with navigation syncing; see dgs_bgm_comp.py)
@@ -32,10 +35,13 @@ with open('../shipgrav/database.toml', 'rb') as f:
 # nav_tag = info['nav-talkers'][ship]  # could use this for nav file read
 bias_dgs = info['bias-values'][ship]['dgs']
 
-# set up file paths, get lists of input files
-root = 'data/'
-dgs_path = os.path.join(root, ship, cruise, 'gravimeter/DGS')
-dgs_files = np.sort(glob(os.path.join(dgs_path, 'AT1M*.Raw')))
+# get the files from Zenodo: TN400 DGS laptop data
+# the archive download includes some things not used for this example; those are not unpacked
+dgs_files = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Thompson/TN400/gravimeter/DGS/AT1M-Grav-PROC_20220314-000001.Raw',
+                    'data/Thompson/TN400/gravimeter/DGS/AT1M-Grav-PROC_20220313-000001.Raw']))
 
 # read and sort the gravimeter data
 dgs_data = sgi.read_dgs_laptop(dgs_files, ship)
