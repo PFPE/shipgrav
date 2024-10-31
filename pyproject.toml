@@ -31,4 +31,4 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-examples = ["matplotlib", "geographiclib"]
+examples = ["matplotlib", "geographiclib", "jupyterlab", "jupytext"]

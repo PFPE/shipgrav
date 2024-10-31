@@ -28,6 +28,8 @@ shipgrav's dependencies are
 * pooch
 * matplotlib (optional, needed to run some of the example scripts)
 * geographiclib (optional, needed to run one of the example scripts)
+* jupyterlab (optional, if you want to run example scripts in jupyter)
+* jupytext (optional, if you want to run example scripts in jupyter)
 
 If you install shipgrav with ``pip``, it will also install any of the required dependencies that are missing. To make ``pip`` include the optional dependencies, run ``pip install shipgrav[examples]``.
 
@@ -67,7 +69,9 @@ The database file included in shipgrav lists the navigation talkers that we expe
 Example scripts
 ---------------
 
-The scripts in the ``example-scripts/`` directory use publicly available data files to run through some common workflows for marine gravity processing. The data files can be downloaded from R2R and Zenodo, and the scripts will do this automatically using ``pooch``. The sources are:
+The scripts in the ``example-scripts/`` directory use publicly available data files to run through some common workflows for marine gravity processing. All of the examples can be run as scripts (ie, with ``python -m <script-name>.py``). All except ``interactive_line_pick.py`` can also be opened in ``jupyter`` as notebooks thanks to ``jupytext``. To run the examples in ``jupyter``, start ``jupyter lab``, right-click on the script file name, and select `open with -> notebook`.
+
+The data files can be downloaded from R2R and Zenodo, and the scripts will do this automatically using ``pooch``. The sources are:
 
 * https://doi.org/10.7284/151470 - TN400 BGM3 data
 * https://doi.org/10.7284/151457 - TN400 nav data
@@ -104,7 +108,7 @@ The scripts in the ``example-scripts/`` directory use publicly available data fi
    :height: 250px
    :align: center
 
-``interactive_line_pick.py`` reads laptop data and navigation data from R/V Sally Ride cruise SR2312. The script generates an interactive plot with a cursor for users to select segments of the time series data based on mapped locations, in order to extract straight line segments from a cruise track. The selected segments are written to files that can be re-read by the next script...
+``interactive_line_pick.py`` reads laptop data and navigation data from R/V Sally Ride cruise SR2312. The script generates an interactive plot with a cursor for users to select segments of the time series data based on mapped locations, in order to extract straight line segments from a cruise track. `This script cannot be run in jupyter`. The selected segments are written to files that can be re-read by the next script...
 
 .. image:: _static/cursor.png
    :alt: Interactive line segment picker window.
