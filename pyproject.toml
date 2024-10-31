@@ -25,7 +25,8 @@ dependencies = [
     "scipy",
     "tomli",
     "statsmodels",
-    "pyyaml"
+    "pyyaml",
+    "tqdm"
 ]
 
 [project.optional-dependencies]

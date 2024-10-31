@@ -3,12 +3,14 @@ from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
-import shipgrav.grav as sgg
-import shipgrav.io as sgi
-import shipgrav.utils as sgu
 import tomli as tm
 from scipy.interpolate import interp1d
 from scipy.signal import filtfilt, firwin
+from tqdm import tqdm
+
+import shipgrav.grav as sgg
+import shipgrav.io as sgi
+import shipgrav.utils as sgu
 
 ########################################################################
 # Example script for reading and calibrating DGS raw (aka serial) data
@@ -87,7 +89,7 @@ dgs_data['full_field'] = dgs_data['grav'] + eotvos_corr + tide_corr
 
 # read the raw (serial) DGS data
 # the serial files for this cruise have some issues, so clean them up first
-for path in dgs_files_raw:  # clean up weird Ride serial files
+for path in tqdm(dgs_files_raw,desc='cleaning serial files'):  # clean up weird Ride serial files
     splitpath = path.split('/')
     newname = 'clean_' + splitpath[-1]
     splitpath[-1] = newname

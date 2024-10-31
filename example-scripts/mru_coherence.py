@@ -3,12 +3,14 @@ from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
-import shipgrav.grav as sgg
-import shipgrav.io as sgi
 import tomli as tm
 from pandas import concat, to_datetime
 from scipy.interpolate import interp1d
 from scipy.signal import coherence, filtfilt, firwin
+from tqdm import tqdm
+
+import shipgrav.grav as sgg
+import shipgrav.io as sgi
 
 ########################################################################
 # Example script for reading DGS laptop data and MRUs from an R/V Ride
@@ -96,7 +98,7 @@ yaml_file = os.path.join(
     root, ship, cruise, 'openrvdas/doc/devices/IXBlue.yaml')
 talk = 'PASHR'
 dats = []
-for mf in mru_files:
+for mf in tqdm(mru_files,desc='reading MRUs'):
     dat, col_info = sgi.read_other_stuff(yaml_file, mf, talk)
     dats.append(dat)
 mru_dat = concat(dats, ignore_index=True)

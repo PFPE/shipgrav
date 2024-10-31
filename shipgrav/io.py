@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 import yaml
+from tqdm import tqdm
 
 # TODO need a fix for places where we cross the international date line (read_nav)
 # TODO check pandas versions for datetime parsing (eg RGS read)
@@ -70,7 +71,7 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
     lonlon = np.array([])
     latlat = np.array([])
 
-    for fpath in pathlist:  # loop nav files (may be a lot of them)
+    for fpath in tqdm(pathlist,desc='reading nav'):  # loop nav files (may be a lot of them)
         with open(fpath, 'r') as f:
             allnav = np.array(f.readlines())  # read the entire file
 
@@ -537,7 +538,7 @@ def read_dgs_laptop(fp, ship, ship_function=None):
         fp = [fp,]  # listify
 
     dats = []
-    for path in fp:
+    for path in tqdm(fp,desc='reading DGS files'):
         if ship_function is not None:
             dat = ship_function(path)
         else:
@@ -595,7 +596,7 @@ def read_dgs_raw(fp, ship, scale_ccp=True):
     if type(fp) is str:
         fp = [fp,]  # listify
     dats = []
-    for ip, path in enumerate(fp):
+    for path in tqdm(fp,desc='reading DGS files'):
         if ship == 'Thompson':  # always with the special file formats
             dat = _dgs_raw_Thompson(path)
         else:  # there might be exceptions besides Thompson but I don't know about them yet
