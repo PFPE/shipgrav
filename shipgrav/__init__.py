@@ -11,7 +11,7 @@ Installation
 
 shipgrav can be installed from `PyPI <https://pypi.org/project/shipgrav/>`_ using ``pip``. We recommend using an environment management tool like `conda <https://anaconda.org>`_. An exemplary set of commands to make a conda enviroment with shipgrav would be: ::
 
-    conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml tqdm matplotlib geographiclib
+    conda create --name shipgrav numpy scipy pandas statsmodels tomli pyyaml tqdm pooch matplotlib geographiclib
     conda activate shipgrav
     pip install shipgrav
 
@@ -25,6 +25,7 @@ shipgrav's dependencies are
 * tomli
 * pyyaml
 * tqdm
+* pooch
 * matplotlib (optional, needed to run some of the example scripts)
 * geographiclib (optional, needed to run one of the example scripts)
 
@@ -47,7 +48,7 @@ shipgrav consists of the modules ``io``, ``nav``, ``grav``, and ``utils``, along
 Data directories
 ----------------
 
-You can organize your data however you like; shipgrav does not care as long as you tell it where to look. However, to run the example scripts, you will need to download some data and ensure that the scripts are pointed to the paths where you put that data. A shell script ``download_data.sh`` is provided in ``example-scripts/`` to help download and organize the data.
+You can organize your data however you like; shipgrav does not care as long as you tell it where to look. The example scripts are set up to download data files from public repositories using ``pooch``. The ``pooch.retrieve()`` function returns lists of file paths for files that have been downloaded and unpacked, so to adapt the example workflows for other data files, you will need to replace those lists of paths with the paths to your data.
 
 Ties and bias
 -------------
@@ -66,7 +67,7 @@ The database file included in shipgrav lists the navigation talkers that we expe
 Example scripts
 ---------------
 
-The scripts in the ``example-scripts/`` directory use publicly available data files to run through some common workflows for marine gravity processing. The data files can be downloaded from R2R and Zenodo. The ``download_data.sh`` shell script in ``example-scripts/`` uses ``curl``, ``tar``, and ``unzip`` to download all the data files for you and unpack them into a directory structure that matches what the examples expect. You can also download and unpack the files on your own from the sources listed below:
+The scripts in the ``example-scripts/`` directory use publicly available data files to run through some common workflows for marine gravity processing. The data files can be downloaded from R2R and Zenodo, and the scripts will do this automatically using ``pooch``. The sources are:
 
 * https://doi.org/10.7284/151470 - TN400 BGM3 data
 * https://doi.org/10.7284/151457 - TN400 nav data
@@ -74,8 +75,6 @@ The scripts in the ``example-scripts/`` directory use publicly available data fi
 * https://doi.org/10.7284/157188 - SR2312 nav data
 * https://doi.org/10.7284/157177 - SR2312 mru data
 * https://doi.org/10.5281/zenodo.12733929 - TN400 DGS raw and laptop data, SR2312 DGS raw data, R/V Ride DGS meter and Hydrins metadata, satellite FAA tracks for comparison, example file for RMBA calculation
-
-If you are not using the download script provided, we recommend looking at what it does and mimicking the directory structure it sets up for the data files. Otherwise, you will have to edit the examples to point to the correct filepaths for wherever you put the data in your system.
 
 ``dgs_bgm_comp.py`` reads data from DGS and BGM gravimeter files from R/V Thompson cruise TN400. The files are lightly processed to obtain the FAA (including syncing with navigation data for more accurate locations), and the FAA is plotted alongside corresponding satellite-derived FAA.
 
