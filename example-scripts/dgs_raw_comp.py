@@ -1,3 +1,30 @@
+# %% [markdown]
+# ### Example script for reading and calibrating DGS raw (aka serial) data from an R/V Ride transit, with comparison to laptop (lightly processed) files output from the meter.
+#
+# Data files are downloaded by the script using pooch
+#
+# Read DGS (serial and laptop) and navigation files
+#
+# Calibrate the raw counts
+#
+# Correct for meter bias with info from shipgrav
+#
+# Use timestamps to sync more accurate nav with the gravity data.
+#
+# Plot laptop and raw data to compare
+#
+# Calculate FAA (free air anomaly) for laptop data
+#
+# Plot laptop FAA along with satellite
+#
+# satellite data was tracked from v32.1 Global Gravity grid, which
+# includes data from SIO, NOAA, and NGA.
+#
+# Reference: Sandwell et al. (2014) New global marine gravity model
+# from CryoSat-2 and Jason-1 reveals buried tectonic struture.
+# Science 346(6205), DOI: 10.1126/science.1258213
+
+# %%
 import os
 from glob import glob
 
@@ -13,27 +40,7 @@ import shipgrav.grav as sgg
 import shipgrav.io as sgi
 import shipgrav.utils as sgu
 
-########################################################################
-# Example script for reading and calibrating DGS raw (aka serial) data
-# from an R/V Ride transit, with comparison to laptop (lightly processed)
-# files output from the meter.
-#
-# Data files are downloaded by the script using pooch
-#
-# Read DGS (serial and laptop) and navigation files
-# Calibrate the raw counts
-# Correct for meter bias with info from shipgrav
-# Use timestamps to sync more accurate nav with the gravity data.
-# Plot laptop and raw data to compare
-# Calculate FAA (free air anomaly) for laptop data
-# Plot laptop FAA along with satellite
-# satellite data tracked from v32.1 Global Gravity grid, which
-# includes data from SIO, NOAA, and NGA.
-# Reference: Sandwell et al. (2014) New global marine gravity model
-# from CryoSat-2 and Jason-1 reveals buried tectonic struture.
-# Science 346(6205), DOI: 10.1126/science.1258213
-########################################################################
-
+# %%
 # set some general metadata
 ship = 'Ride'
 cruise = 'SR2312'       # this is used for filepaths
@@ -46,6 +53,7 @@ nav_tag = info['nav-talkers'][ship]
 biases = info['bias-values'][ship]
 cal_factor = info['dgs-stuff']['calibration_factor']
 
+# %%
 # get the data: raw DGS from zenodo, laptop and nav from R2R
 dgs_files_raw = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
         known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
@@ -74,17 +82,13 @@ nav_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fil
                      'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-19.txt',
                      'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-20.txt']))
 
-
-
-# set up file paths, get lists of input files
-root = 'data/'
-dgs_path = os.path.join(root, ship, cruise, 'gravimeter/DGS')
-
+# %%
 # read and sort the nav data
 gps_nav = sgi.read_nav(ship, nav_files, talker='GPGGA')
 gps_nav.sort_values('time_sec', inplace=True)
 gps_nav.reset_index(inplace=True, drop=True)
 
+# %%
 # read and sort the DGS laptop data
 dgs_data = sgi.read_dgs_laptop(dgs_files, ship)
 dgs_data.sort_values('date_time', inplace=True)
@@ -93,6 +97,7 @@ dgs_data['tsec'] = [e.timestamp()
                     for e in dgs_data['date_time']]  # get posix timestamps
 dgs_data['grav'] = dgs_data['rgrav'] + biases['dgs']
 
+# %%
 # sync data geographic coordinates to nav by interpolating with timestamps
 # (interpolators use posix timestamps, not datetimes)
 gps_lon_int = interp1d(gps_nav['time_sec'].values, gps_nav['lon'].values,
@@ -102,6 +107,7 @@ gps_lat_int = interp1d(gps_nav['time_sec'].values, gps_nav['lat'].values,
 dgs_data['lon_new'] = gps_lon_int(dgs_data['tsec'].values)
 dgs_data['lat_new'] = gps_lat_int(dgs_data['tsec'].values)
 
+# %%
 # calculate corrections for FAA
 ellipsoid_ht = np.zeros(len(dgs_data))  # we are working at sea level
 lat_corr = sgg.wgs_grav(dgs_data['lat_new']) + \
@@ -114,7 +120,7 @@ tide_corr = sgg.longman_tide_prediction(
 dgs_data['faa'] = dgs_data['grav'] - lat_corr + eotvos_corr + tide_corr
 dgs_data['full_field'] = dgs_data['grav'] + eotvos_corr + tide_corr
 
-# read the raw (serial) DGS data
+# %%
 # the serial files for this cruise have some issues, so clean them up first
 dgs_raw_clean = []
 for path in tqdm(dgs_files_raw,desc='cleaning serial files'):  # clean up weird Ride serial files
@@ -136,8 +142,11 @@ for path in tqdm(dgs_files_raw,desc='cleaning serial files'):  # clean up weird 
             f.write(line)
 dgs_files_raw = np.sort(dgs_raw_clean)
 
+# %%
+# read the raw (serial) DGS data
 raw_dgs = sgi.read_dgs_raw(dgs_files_raw, ship)
 
+# %%
 # read some meter info for the raw data calibration
 # find the meter config file
 ini_file = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
@@ -147,6 +156,7 @@ ini_file = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zi
 opath = sgu.clean_ini_to_toml(ini_file[0])  # make it a little easier to read
 meter_conf = tm.load(open(opath, 'rb'))
 
+# %%
 # calibrate stuff (though we won't use all of these things here)
 # 24-bit channels
 raw_dgs['grav_cal'] = (raw_dgs['Gravity']*meter_conf['Sensor']['GravCal']/cal_factor) + \
@@ -166,6 +176,7 @@ raw_dgs['electemp_cal'] = (raw_dgs['ElecTemp']*meter_conf['Sensor']['Etempgain']
     meter_conf['Sensor']['Etempzero']
 raw_dgs['grav'] = raw_dgs['grav_cal'] + biases['dgs']
 
+# %%
 # plot a comparison between serial and laptop data (raw, not FAA)
 # select a small portion of the data bc otherwise it's hard to see anything
 d0 = dgs_data.iloc[0]['date_time']
@@ -184,6 +195,7 @@ plt.ylabel('Raw gravity')
 plt.legend(fontsize=8)
 plt.tight_layout()
 
+# %%
 # get position information for raw data points from gps nav (serial files for
 # this cruise, at least, have zeros where the coordinates are expected to be)
 raw_dgs['tsec'] = [e.timestamp() for e in raw_dgs['date_time']
@@ -192,6 +204,7 @@ raw_dgs['tsec'] = [e.timestamp() for e in raw_dgs['date_time']
 raw_dgs['lon_new'] = gps_lon_int(raw_dgs['tsec'].values)
 raw_dgs['lat_new'] = gps_lat_int(raw_dgs['tsec'].values)
 
+# %%
 # NOTE that because of issues with the serial output for this cruise, the raw data
 # is not sampled at an even time interval.
 plt.figure()
@@ -200,11 +213,13 @@ plt.xlabel('timestamp')
 plt.ylabel('sampling interval in seconds')
 plt.title('uneven sampling interval for serial data files')
 
+# %% [markdown]
 # We can get location info by interpolating from the nav files, but we would need to
 # interpolate the data as well to obtain (and filter) the FAA from the serial files.
 # Having verified that the laptop and serial files match well where there *is* data,
 # I'm not going to bother with that here.
 
+# %%
 # apply a lowpass filter to FAA
 taps = 2*240
 freq = 1./240
@@ -215,6 +230,7 @@ B = firwin(taps, wn, window='blackman')  # approx equivalent to matlab fir1
 
 ffaa = filtfilt(B, 1, dgs_data['faa'])
 
+# %%
 # load satellite data for comparison
 sat_path = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
         known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
@@ -222,6 +238,7 @@ sat_path = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zi
             members=['data/Ride/SR2312/sandwell_tracked.llg']))
 sat_grav = np.loadtxt(sat_path[0], usecols=(2,))
 
+# %%
 # plot laptop FAA and satellite data (trim edge effects from filtering)
 plt.figure(figsize=(11, 4.8))
 plt.plot(dgs_data.iloc[taps:-taps//2]['date_time'],
@@ -235,3 +252,5 @@ plt.tight_layout()
 
 # show all of the figures
 plt.show()
+
+# %%

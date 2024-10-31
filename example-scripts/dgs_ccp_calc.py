@@ -1,3 +1,22 @@
+# %% [markdown]
+# ### Example script using data from TN400 to illustrate how cross-coupling coefficients are calculated and applied.
+#
+# Data files are downloaded by the script using pooch
+#
+# Read DGS data files
+# (not bothering with navigation syncing; see dgs_bgm_comp.py)
+#
+# Calculate FAA
+#
+# Calculate various kinematic parameters
+#
+# Fit for cross-coupling coefficients
+#
+# Correct for cross-coupling
+#
+# Plot with and without corrections
+
+# %%
 import os
 from glob import glob
 
@@ -10,21 +29,7 @@ import shipgrav.nav as sgn
 import tomli as tm
 from scipy.signal import filtfilt, firwin
 
-########################################################################
-# Example script using data from TN400 to illustrate how cross-
-# coupling coefficients are calculated and applied.
-#
-# Data files are downloaded by the script using pooch
-#
-# Read DGS data files
-# (not bothering with navigation syncing; see dgs_bgm_comp.py)
-# Calculate FAA
-# Calculate various kinematic parameters
-# Fit for cross-coupling coefficients
-# Correct for cross-coupling
-# Plot with and without corrections
-########################################################################
-
+# %%
 # set some general metadata
 ship = 'Thompson'
 cruise = 'TN400'
@@ -35,6 +40,7 @@ with open('../shipgrav/database.toml', 'rb') as f:
 # nav_tag = info['nav-talkers'][ship]  # could use this for nav file read
 bias_dgs = info['bias-values'][ship]['dgs']
 
+# %%
 # get the files from Zenodo: TN400 DGS laptop data
 # the archive download includes some things not used for this example; those are not unpacked
 dgs_files = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
@@ -43,6 +49,7 @@ dgs_files = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.z
             members=['data/Thompson/TN400/gravimeter/DGS/AT1M-Grav-PROC_20220314-000001.Raw',
                     'data/Thompson/TN400/gravimeter/DGS/AT1M-Grav-PROC_20220313-000001.Raw']))
 
+# %%
 # read and sort the gravimeter data
 dgs_data = sgi.read_dgs_laptop(dgs_files, ship)
 dgs_data.sort_values('date_time', inplace=True)
@@ -51,9 +58,11 @@ dgs_data['tsec'] = [e.timestamp()
                     for e in dgs_data['date_time']]  # get posix timestamps
 dgs_data['grav'] = dgs_data['rgrav'] + bias_dgs
 
+# %%
 # trim some bits that we happen to know are bad
 dgs_data = dgs_data.iloc[1000:]
 
+# %%
 # calculate corrections for FAA
 ellipsoid_ht = np.zeros(len(dgs_data))  # we are working at sea level
 lat_corr = sgg.wgs_grav(dgs_data['lat']) + \
@@ -66,6 +75,7 @@ tide_corr = sgg.longman_tide_prediction(
 dgs_data['faa'] = dgs_data['grav'] - lat_corr + eotvos_corr + tide_corr
 dgs_data['full_field'] = dgs_data['grav'] + eotvos_corr + tide_corr
 
+# %%
 # calculate kinematic variables and corrections for tilt correction
 # (maybe not strictly necessary? depends who you ask)
 gps_vn, gps_ve = sgn.latlon_to_EN(
@@ -83,6 +93,7 @@ vel[np.isnan(vel)] = 0
 acc_cross, acc_long = sgn.rotate_acceleration_EN_to_cl(
     crse, gps_eacc, gps_nacc)  # gps-derived cross and long accel
 
+# %%
 # tilt correction
 up_vecs = sgg.up_vecs(1/sampling, lat_corr, acc_cross,
                       acc_long, 0, 240, 0.7071, 240, 0.7071)
@@ -91,6 +102,7 @@ cross_in_plat = acc_cross*up_vecs[1, :]
 long_in_plat = acc_long*up_vecs[0, :]
 level_error = lat_corr - igf_in_plat - long_in_plat + cross_in_plat
 
+# %%
 # calculate cross-coupling coefficients
 _, model = sgg.calc_cross_coupling_coefficients(dgs_data['faa'].values, dgs_data['vcc'].values, dgs_data['ve'].values,
                                                 dgs_data['al'].values, dgs_data['ax'].values, level_error.values)
@@ -99,6 +111,7 @@ print('cross coupling parameters from fit:')
 print('ve %.3f, vcc %.3f, al %.3f, ax %.3f, lev %.3f' % (model.params.ve,
       model.params.vcc, model.params.al, model.params.ax, model.params.lev))
 
+# %%
 # apply cross-coupling correction and plot the (filtered) FAA
 dgs_data['faa_ccp'] = dgs_data['faa'] + model.params.ve*dgs_data['ve'] + \
     model.params.vcc*dgs_data['vcc'] + \
@@ -114,6 +127,8 @@ B = firwin(taps, wn, window='blackman')  # approx equivalent to matlab fir1
 
 ffaa = filtfilt(B, 1, dgs_data['faa'])
 cfaa = filtfilt(B, 1, dgs_data['faa_ccp'])
+
+# %%
 plt.figure(figsize=(11, 4.8))
 plt.plot(dgs_data.iloc[taps:-taps//2]['date_time'],
          ffaa[taps:-taps//2], label='no ccp')
@@ -124,3 +139,5 @@ plt.ylabel('Free air anomaly [mGal]')
 plt.legend(fontsize=8)
 plt.tight_layout()
 plt.show()
+
+# %%

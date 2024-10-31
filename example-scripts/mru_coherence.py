@@ -1,3 +1,21 @@
+# %% [markdown]
+# ### Example script for reading DGS laptop data and MRUs from an R/V Ride transit, and calculating coherence between MRUs and monitors
+#
+# Data files are downloaded by the script using pooch
+#
+# Read DGS laptop and navigation files
+#
+# Correct for meter bias with info from shipgrav
+#
+# Use timestamps to sync more accurate nav with the gravity data.
+#
+# Calculate FAA (free air anomaly) for laptop data
+#
+# Read MRUs (pitch/roll/heave) for all pairs of monitors and MRUs, interpolate MRU to grav sample rate and calculate coherence between monitor and 1000-pt moving average of MRU
+#
+# (and plot coherence)
+
+# %%
 import os
 from glob import glob
 
@@ -13,23 +31,7 @@ from tqdm import tqdm
 import shipgrav.grav as sgg
 import shipgrav.io as sgi
 
-########################################################################
-# Example script for reading DGS laptop data and MRUs from an R/V Ride
-# transit, and calculating coherence between MRUs and monitors
-#
-# Data files are downloaded by the script using pooch
-#
-# Read DGS laptop and navigation files
-# Correct for meter bias with info from shipgrav
-# Use timestamps to sync more accurate nav with the gravity data.
-# Calculate FAA (free air anomaly) for laptop data
-# Read MRUs (pitch/roll/heave)
-# for all pairs of monitors and MRUs, interpolate
-# MRU to grav sample rate and calculate coherence
-# between monitor and 1000-pt moving average of MRU
-# (and plot coherence)
-########################################################################
-
+# %%
 # set some general metadata
 ship = 'Ride'
 cruise = 'SR2312'       # this is used for filepaths
@@ -41,6 +43,7 @@ with open('../shipgrav/database.toml', 'rb') as f:
 nav_tag = info['nav-talkers'][ship]
 biases = info['bias-values'][ship]
 
+# %%
 # get the DGS and nav data from R2R
 dgs_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157179", 
         known_hash="53f53c45aa59ce19cd1e75e3d847b5697123ad0a1296aa2be28bf26ff0ad19ac", progressbar=True, 
@@ -60,11 +63,13 @@ nav_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fil
                      'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-19.txt',
                      'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-20.txt']))
 
+# %%
 # read and sort the nav data
 gps_nav = sgi.read_nav(ship, nav_files, talker='GPGGA')
 gps_nav.sort_values('time_sec', inplace=True)
 gps_nav.reset_index(inplace=True, drop=True)
 
+# %%
 # read and sort the DGS laptop data
 dgs_data = sgi.read_dgs_laptop(dgs_files, ship)
 dgs_data.sort_values('date_time', inplace=True)
@@ -73,6 +78,7 @@ dgs_data['tsec'] = [e.timestamp()
                     for e in dgs_data['date_time']]  # get posix timestamps
 dgs_data['grav'] = dgs_data['rgrav'] + biases['dgs']
 
+# %%
 # sync data geographic coordinates to nav by interpolating with timestamps
 # (interpolators use posix timestamps, not datetimes)
 gps_lon_int = interp1d(gps_nav['time_sec'].values, gps_nav['lon'].values,
@@ -82,6 +88,7 @@ gps_lat_int = interp1d(gps_nav['time_sec'].values, gps_nav['lat'].values,
 dgs_data['lon_new'] = gps_lon_int(dgs_data['tsec'].values)
 dgs_data['lat_new'] = gps_lat_int(dgs_data['tsec'].values)
 
+# %%
 # calculate corrections for FAA
 ellipsoid_ht = np.zeros(len(dgs_data))  # we are working at sea level
 lat_corr = sgg.wgs_grav(dgs_data['lat_new']) + \
@@ -94,6 +101,7 @@ tide_corr = sgg.longman_tide_prediction(
 dgs_data['faa'] = dgs_data['grav'] - lat_corr + eotvos_corr + tide_corr
 dgs_data['full_field'] = dgs_data['grav'] + eotvos_corr + tide_corr
 
+# %%
 # apply a lowpass filter to FAA
 taps = 2*240
 freq = 1./240
@@ -104,6 +112,7 @@ B = firwin(taps, wn, window='blackman')  # approx equivalent to matlab fir1
 
 ffaa = filtfilt(B, 1, dgs_data['faa'])
 
+# %%
 # get some MRU time series files from zenodo
 # read in some other time series from MRUs
 mru_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157177", 
@@ -119,6 +128,7 @@ yaml_file = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.z
         processor=pooch.Unzip(
             members=['data/Ride/SR2312/openrvdas/doc/devices/IXBlue.yaml']))
 
+# %%
 talk = 'PASHR'
 dats = []
 # note that the MRU data will need to be sorted in the same time series order as the DGS data
@@ -129,11 +139,13 @@ for mf in tqdm(np.sort(mru_files),desc='reading MRUs'):
 mru_dat = concat(dats, ignore_index=True)
 del dats, dat  # cleanup
 
+# %%
 # we have some prior knowledge about this data that lets us find the timestamps:
 mru_dat['date_time'] = to_datetime(mru_dat['mystery'], utc=True)
 mru_dat.drop('mystery', axis=1, inplace=True)
 mru_dat['tsec'] = [e.timestamp() for e in mru_dat['date_time']]
 
+# %%
 # if we want to look at coherence between monitors and MRUs, have to interpolate first
 # because monitors are at 2Hz
 for motion in ['Pitch', 'Roll', 'Heave']:
@@ -150,3 +162,5 @@ for motion in ['Pitch', 'Roll', 'Heave']:
     plt.xlabel('Frequency [Hz]')
 
 plt.show()
+
+# %%
