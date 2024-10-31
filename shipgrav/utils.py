@@ -114,6 +114,8 @@ def clean_ini_to_toml(ini_file):
     the extension .ini replaced by .toml
 
     :param ini_file: path to input ini file
+
+    :return: **opath** (*string*) - path to output toml file
     """
 
     with open(ini_file, 'r') as file:
@@ -132,7 +134,8 @@ def clean_ini_to_toml(ini_file):
     text = re.sub('$', '', text)
 
     # fix unquoted strings and write
-    fo = open(ini_file.rstrip('ini')+'toml', 'w')
+    opath = ini_file.rstrip('ini')+'toml'
+    fo = open(opath, 'w')
     lines = text.split('\n')
     for ln in lines:
         if ln.startswith('$'):
@@ -169,7 +172,7 @@ def clean_ini_to_toml(ini_file):
         fo.write('\n')
 
     fo.close()
-    return
+    return opath
 
 
 class _SnappingCursor:

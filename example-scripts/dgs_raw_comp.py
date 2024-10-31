@@ -3,6 +3,7 @@ from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import tomli as tm
 from scipy.interpolate import interp1d
 from scipy.signal import filtfilt, firwin
@@ -16,6 +17,8 @@ import shipgrav.utils as sgu
 # Example script for reading and calibrating DGS raw (aka serial) data
 # from an R/V Ride transit, with comparison to laptop (lightly processed)
 # files output from the meter.
+#
+# Data files are downloaded by the script using pooch
 #
 # Read DGS (serial and laptop) and navigation files
 # Calibrate the raw counts
@@ -43,15 +46,39 @@ nav_tag = info['nav-talkers'][ship]
 biases = info['bias-values'][ship]
 cal_factor = info['dgs-stuff']['calibration_factor']
 
+# get the data: raw DGS from zenodo, laptop and nav from R2R
+dgs_files_raw = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Ride/SR2312/gravimeter/DGS/serial/SR2312_grav_dgs-2023-06-16.txt',
+                    'data/Ride/SR2312/gravimeter/DGS/serial/SR2312_grav_dgs-2023-06-17.txt',
+                    'data/Ride/SR2312/gravimeter/DGS/serial/SR2312_grav_dgs-2023-06-18.txt',
+                    'data/Ride/SR2312/gravimeter/DGS/serial/SR2312_grav_dgs-2023-06-19.txt',
+                    'data/Ride/SR2312/gravimeter/DGS/serial/SR2312_grav_dgs-2023-06-20.txt']))
+
+dgs_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157179", 
+        known_hash="53f53c45aa59ce19cd1e75e3d847b5697123ad0a1296aa2be28bf26ff0ad19ac", progressbar=True, 
+        processor=pooch.Untar(
+            members=['SR2312/157179/data/AT1M-25_20230616_167.dat',
+                     'SR2312/157179/data/AT1M-25_20230617_168.dat',
+                     'SR2312/157179/data/AT1M-25_20230618_169.dat',
+                     'SR2312/157179/data/AT1M-25_20230619_170.dat',
+                     'SR2312/157179/data/AT1M-25_20230620_171.dat']))
+
+nav_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157188", 
+        known_hash="eb5992eadd87b09f66308a4d577c6ba6965d8ed8489959ffaed8bf5556ee712f", progressbar=True, 
+        processor=pooch.Untar(
+            members=['SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-16.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-17.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-18.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-19.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-20.txt']))
+
+
+
 # set up file paths, get lists of input files
 root = 'data/'
 dgs_path = os.path.join(root, ship, cruise, 'gravimeter/DGS')
-dgs_path_raw = os.path.join(root, ship, cruise, 'gravimeter/DGS/serial')
-nav_path = os.path.join(root, ship, cruise, 'NAV')
-dgs_files = np.sort(glob(os.path.join(dgs_path, 'AT1M-*.dat')))
-dgs_files_raw = np.sort(glob(os.path.join(dgs_path_raw, 'SR*_grav_dgs*.txt')))
-nav_files = np.sort(
-    glob(os.path.join(nav_path, '*mru_seapath330_navbho*.txt')))
 
 # read and sort the nav data
 gps_nav = sgi.read_nav(ship, nav_files, talker='GPGGA')
@@ -89,11 +116,13 @@ dgs_data['full_field'] = dgs_data['grav'] + eotvos_corr + tide_corr
 
 # read the raw (serial) DGS data
 # the serial files for this cruise have some issues, so clean them up first
+dgs_raw_clean = []
 for path in tqdm(dgs_files_raw,desc='cleaning serial files'):  # clean up weird Ride serial files
     splitpath = path.split('/')
     newname = 'clean_' + splitpath[-1]
     splitpath[-1] = newname
     opath = '/'.join(splitpath)
+    dgs_raw_clean.append(opath)
     if os.path.isfile(opath):
         continue
     with open(path, 'r') as f:
@@ -105,17 +134,18 @@ for path in tqdm(dgs_files_raw,desc='cleaning serial files'):  # clean up weird 
     with open(opath, 'w') as f:
         for line in long:
             f.write(line)
-dgs_files_raw = np.sort(
-    glob(os.path.join(dgs_path_raw, 'clean_SR*_grav_dgs*.txt')))
+dgs_files_raw = np.sort(dgs_raw_clean)
 
 raw_dgs = sgi.read_dgs_raw(dgs_files_raw, ship)
 
 # read some meter info for the raw data calibration
 # find the meter config file
-ini_file = os.path.join(root, ship, cruise, 'Meter.ini')
-sgu.clean_ini_to_toml(ini_file)  # make it a little easier to read
-meter_conf = tm.load(
-    open(os.path.join(root, ship, cruise, 'Meter.toml'), 'rb'))
+ini_file = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Ride/SR2312/Meter.ini']))
+opath = sgu.clean_ini_to_toml(ini_file[0])  # make it a little easier to read
+meter_conf = tm.load(open(opath, 'rb'))
 
 # calibrate stuff (though we won't use all of these things here)
 # 24-bit channels
@@ -186,8 +216,11 @@ B = firwin(taps, wn, window='blackman')  # approx equivalent to matlab fir1
 ffaa = filtfilt(B, 1, dgs_data['faa'])
 
 # load satellite data for comparison
-sat_grav = np.loadtxt(os.path.join(root, ship, cruise,
-                      'sandwell_tracked.llg'), usecols=(2,))
+sat_path = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Ride/SR2312/sandwell_tracked.llg']))
+sat_grav = np.loadtxt(sat_path[0], usecols=(2,))
 
 # plot laptop FAA and satellite data (trim edge effects from filtering)
 plt.figure(figsize=(11, 4.8))

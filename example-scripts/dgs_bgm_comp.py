@@ -3,6 +3,7 @@ from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import shipgrav.grav as sgg
 import shipgrav.io as sgi
 import tomli as tm
@@ -12,6 +13,8 @@ from scipy.signal import filtfilt, firwin
 ########################################################################
 # Example script for reading and lightly processing DGS laptop data
 # from a Thompson cruise, and comparing to BGM serial files.
+#
+# Data files are downloaded by the script using pooch
 #
 # Read DGS and navigation files
 # Read BGM files
@@ -38,15 +41,24 @@ with open('../shipgrav/database.toml', 'rb') as f:
 nav_tag = info['nav-talkers'][ship]
 biases = info['bias-values'][ship]
 
-# set up file paths, get lists of input files
-root = 'data/'
-dgs_path = os.path.join(root, ship, cruise, 'gravimeter/DGS')
-# we only have serial BGM
-bgm_path = os.path.join(root, ship, cruise, 'gravimeter/BGM3/serial')
-nav_path = os.path.join(root, ship, cruise, 'NAV')
-dgs_files = np.sort(glob(os.path.join(dgs_path, 'AT1M-Grav-PROC_*.Raw')))
-bgm_files = np.sort(glob(os.path.join(bgm_path, 'BGM3-GRAV-RAW*.Raw')))
-nav_files = np.sort(glob(os.path.join(nav_path, 'POSMV*%s*.Raw' % nav_tag)))
+# get files: DGS laptop from zenodo, BGM serial and nav from R2R
+dgs_files = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Thompson/TN400/gravimeter/DGS/AT1M-Grav-PROC_20220314-000001.Raw',
+                    'data/Thompson/TN400/gravimeter/DGS/AT1M-Grav-PROC_20220313-000001.Raw']))
+
+bgm_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/TN400/fileset/151470",
+        known_hash='b0ccc52e60334284dd79573e27e050eead77f5ac1d59f510385c7e05a8474bcf',progressbar=True,
+        processor=pooch.Untar(
+            members=['TN400/151470/data/BGM3-GRAV-RAW_20220313-000001.Raw',
+                    'TN400/151470/data/BGM3-GRAV-RAW_20220314-000001.Raw']))
+
+nav_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/TN400/fileset/151457",
+        known_hash="76e66365c41d393510bb7ab9637305296282e9041415c1343faa171af28abf85",progressbar=True,
+        processor=pooch.Untar(
+            members=['TN400/151457/data/POSMV-V5-INGGA-RAW_20220313-000001.Raw',
+                    'TN400/151457/data/POSMV-V5-INGGA-RAW_20220314-000001.Raw']))
 
 # read and sort the nav data
 gps_nav = sgi.read_nav(ship, nav_files)
@@ -108,7 +120,11 @@ dfaa = filtfilt(B, 1, dgs_data['faa'])
 bfaa = filtfilt(B, 1, bgm_data['faa'])
 
 # load satellite data for comparison
-sat_grav = np.loadtxt(os.path.join(root, ship, cruise, 'sandwell_tracked.llg'), usecols=(3,),
+sat_path = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Thompson/TN400/sandwell_tracked.llg']))
+sat_grav = np.loadtxt(sat_path[0], usecols=(3,),
                       delimiter=',', skiprows=1)
 
 # plot this data and satellite data (trim edge effects from filtering)

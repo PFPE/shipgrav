@@ -4,6 +4,7 @@ from shutil import rmtree
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import shipgrav.grav as sgg
 import shipgrav.io as sgi
 import shipgrav.utils as sgu
@@ -19,6 +20,8 @@ from scipy.signal import filtfilt, firwin
 # calculating MBA or RMBA and the ship did not conveniently change
 # course at midnight when the gravity files turn over.
 # Segments of grav data are written to files for rereading later.
+#
+# Input data files are downloaded by the script using pooch
 ########################################################################
 
 # set some general metadata
@@ -33,13 +36,24 @@ nav_tag = info['nav-talkers'][ship]
 biases = info['bias-values'][ship]
 cal_factor = info['dgs-stuff']['calibration_factor']
 
-# set up file paths, get lists of input files
-root = 'data/'
-dgs_path = os.path.join(root, ship, cruise, 'gravimeter/DGS')
-nav_path = os.path.join(root, ship, cruise, 'NAV')
-dgs_files = np.sort(glob(os.path.join(dgs_path, 'AT1M-*.dat')))
-nav_files = np.sort(
-    glob(os.path.join(nav_path, '*mru_seapath330_navbho*.txt')))
+# get the dgs laptop and nav data from R2R
+dgs_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157179", 
+        known_hash="53f53c45aa59ce19cd1e75e3d847b5697123ad0a1296aa2be28bf26ff0ad19ac", progressbar=True, 
+        processor=pooch.Untar(
+            members=['SR2312/157179/data/AT1M-25_20230616_167.dat',
+                     'SR2312/157179/data/AT1M-25_20230617_168.dat',
+                     'SR2312/157179/data/AT1M-25_20230618_169.dat',
+                     'SR2312/157179/data/AT1M-25_20230619_170.dat',
+                     'SR2312/157179/data/AT1M-25_20230620_171.dat']))
+
+nav_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157188", 
+        known_hash="eb5992eadd87b09f66308a4d577c6ba6965d8ed8489959ffaed8bf5556ee712f", progressbar=True, 
+        processor=pooch.Untar(
+            members=['SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-16.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-17.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-18.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-19.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-20.txt']))
 
 # read and sort the nav data
 gps_nav = sgi.read_nav(ship, nav_files, talker='GPGGA')
@@ -145,7 +159,7 @@ while True:
 
 # with segments safely selected, we'll write out the data for each into a separate file that can be re-read later for further processing
 # make a directory for this segmented data
-seg_path = os.path.join(root, ship, cruise, 'gravimeter/DGS/line-segments')
+seg_path = os.path.join(ship, cruise, 'gravimeter/DGS/line-segments')
 os.makedirs(seg_path, exist_ok=True)
 
 if os.listdir(seg_path) != []:

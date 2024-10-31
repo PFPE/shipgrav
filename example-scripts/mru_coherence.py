@@ -3,6 +3,7 @@ from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import tomli as tm
 from pandas import concat, to_datetime
 from scipy.interpolate import interp1d
@@ -15,6 +16,8 @@ import shipgrav.io as sgi
 ########################################################################
 # Example script for reading DGS laptop data and MRUs from an R/V Ride
 # transit, and calculating coherence between MRUs and monitors
+#
+# Data files are downloaded by the script using pooch
 #
 # Read DGS laptop and navigation files
 # Correct for meter bias with info from shipgrav
@@ -38,13 +41,24 @@ with open('../shipgrav/database.toml', 'rb') as f:
 nav_tag = info['nav-talkers'][ship]
 biases = info['bias-values'][ship]
 
-# set up file paths, get lists of input files
-root = 'data/'
-dgs_path = os.path.join(root, ship, cruise, 'gravimeter/DGS')
-nav_path = os.path.join(root, ship, cruise, 'NAV')
-dgs_files = np.sort(glob(os.path.join(dgs_path, 'AT1M-*.dat')))
-nav_files = np.sort(
-    glob(os.path.join(nav_path, '*mru_seapath330_navbho*.txt')))
+# get the DGS and nav data from R2R
+dgs_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157179", 
+        known_hash="53f53c45aa59ce19cd1e75e3d847b5697123ad0a1296aa2be28bf26ff0ad19ac", progressbar=True, 
+        processor=pooch.Untar(
+            members=['SR2312/157179/data/AT1M-25_20230616_167.dat',
+                     'SR2312/157179/data/AT1M-25_20230617_168.dat',
+                     'SR2312/157179/data/AT1M-25_20230618_169.dat',
+                     'SR2312/157179/data/AT1M-25_20230619_170.dat',
+                     'SR2312/157179/data/AT1M-25_20230620_171.dat']))
+
+nav_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157188", 
+        known_hash="eb5992eadd87b09f66308a4d577c6ba6965d8ed8489959ffaed8bf5556ee712f", progressbar=True, 
+        processor=pooch.Untar(
+            members=['SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-16.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-17.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-18.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-19.txt',
+                     'SR2312/157188/data/SR2312_mru_seapath330_navbho-2023-06-20.txt']))
 
 # read and sort the nav data
 gps_nav = sgi.read_nav(ship, nav_files, talker='GPGGA')
@@ -90,16 +104,27 @@ B = firwin(taps, wn, window='blackman')  # approx equivalent to matlab fir1
 
 ffaa = filtfilt(B, 1, dgs_data['faa'])
 
+# get some MRU time series files from zenodo
 # read in some other time series from MRUs
-mru_path = os.path.join(root, ship, cruise, 'openrvdas/data')
-mru_files = np.sort(
-    glob(os.path.join(mru_path, 'SR2312_mru_hydrins_navbho*.txt')))
-yaml_file = os.path.join(
-    root, ship, cruise, 'openrvdas/doc/devices/IXBlue.yaml')
+mru_files = pooch.retrieve(url="https://service.rvdata.us/data/cruise/SR2312/fileset/157177", 
+        known_hash="ca12af51a33983f77d775098c06744e509baf31531a2afc37e39f1775f51d7f8", progressbar=True, 
+        processor=pooch.Untar(
+            members=['SR2312/157177/data/SR2312_mru_hydrins_navbho-2023-06-16.txt',
+                     'SR2312/157177/data/SR2312_mru_hydrins_navbho-2023-06-17.txt',
+                     'SR2312/157177/data/SR2312_mru_hydrins_navbho-2023-06-18.txt',
+                     'SR2312/157177/data/SR2312_mru_hydrins_navbho-2023-06-19.txt',
+                     'SR2312/157177/data/SR2312_mru_hydrins_navbho-2023-06-20.txt']))
+yaml_file = pooch.retrieve(url="https://zenodo.org/records/12733929/files/data.zip", 
+        known_hash="md5:83b0411926c0fef9d7ccb2515bb27cc0", progressbar=True, 
+        processor=pooch.Unzip(
+            members=['data/Ride/SR2312/openrvdas/doc/devices/IXBlue.yaml']))
+
 talk = 'PASHR'
 dats = []
-for mf in tqdm(mru_files,desc='reading MRUs'):
-    dat, col_info = sgi.read_other_stuff(yaml_file, mf, talk)
+# note that the MRU data will need to be sorted in the same time series order as the DGS data
+# sorting by filename accomplishes this since the paths have dates
+for mf in tqdm(np.sort(mru_files),desc='reading MRUs'):
+    dat, col_info = sgi.read_other_stuff(yaml_file[0], mf, talk)
     dats.append(dat)
 mru_dat = concat(dats, ignore_index=True)
 del dats, dat  # cleanup
