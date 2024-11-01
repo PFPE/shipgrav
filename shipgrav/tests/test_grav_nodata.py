@@ -36,9 +36,26 @@ class gravNoDataTestCase(unittest.TestCase):
 
     def test_crustalthickness(self):
         rng = np.random.default_rng(123)  # seeded
-        C = sgg.crustal_thickness_2D(10*rng.random(1000))
+        signal = 10*rng.random(1000)
+        C = sgg.crustal_thickness_2D(signal)
         self.assertTrue(np.real(C[0])[0] - 0.04019 < 0.001)
 
+        C2 = sgg.crustal_thickness_2D(signal, back=True)
+        self.assertEqual(np.real(C[0])[0], np.real(C2[0][-1])[0])
+
+    def test_grav2d_folding(self):
+        rng = np.random.default_rng(123)  # seeded
+        X = np.arange(5); Y = np.arange(5)
+        Z = rng.random((5,5))
+        sdat = sgg.grav2d_folding(X, Y, Z, 100, 100,  drho=0.6, dz=6000, ifold=True, npower=5)
+
+        self.assertTrue(sdat[0,0] + 0.0043244755 < 0.001)
+
+    def test_grav2d_layer(self):
+        rng = np.random.default_rng(123)  # seeded
+        rho = 1e4*rng.random((5,5))
+        sdat = sgg.grav2d_layer_variable_density(rho, 100, 100, 3, 5)
+        self.assertTrue(sdat[0,0] - 130.877533 < 0.001)
 
 def suite():
     return unittest.makeSuite(gravNoDataTestCase, 'test')
