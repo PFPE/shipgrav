@@ -483,8 +483,6 @@ def _bgmserial_Revelle(path):
     def count(x): return (int(x.split(':')[-1]))
     dat = pd.read_csv(path, delimiter=' ', names=['date_time', 'counts'], usecols=(0, 1),
                       parse_dates=[0], converters={'counts': count})
-    ndt = [e.tz_localize(timezone.utc) for e in dat['date_time']]
-    dat['date_time'] = ndt
     return dat
 
 def _bgmserial_Langseth(path):
