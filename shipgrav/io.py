@@ -17,7 +17,7 @@ from tqdm import tqdm
 ########################################################################
 
 
-def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
+def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, progressbar=True):
     """ Read navigation strings from .GPS (or similar) files.
 
     Ships have different formats and use different talkers for preferred
@@ -38,6 +38,8 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
         This function should return arrays of lon, lat, and timestamps.
         Look at _navcoords() and navdate_Atlantis() (and similar functions) for examples.
     :type ship_function: function, optional
+    :param progressbar: display progress bar while list of files is read
+    :type progressbar: bool
 
     :returns: (*pd.DataFrame*) time series of geographic coordinates and timestamps
     """
@@ -71,7 +73,7 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None):
     lonlon = np.array([])
     latlat = np.array([])
 
-    for fpath in tqdm(pathlist,desc='reading nav'):  # loop nav files (may be a lot of them)
+    for fpath in tqdm(pathlist,desc='reading nav',disable=~progressbar):  # loop nav files (may be a lot of them)
         with open(fpath, 'r') as f:
             allnav = np.array(f.readlines())  # read the entire file
 
@@ -360,7 +362,7 @@ def _clean_180cross(gps_nav):
 ########################################################################
 
 
-def read_bgm_rgs(fp, ship):
+def read_bgm_rgs(fp, ship, progressbar=True):
     """Read BGM gravity from RGS files.
 
     RGS is supposedly a standard format; is consistent between Atlantis 
@@ -370,6 +372,8 @@ def read_bgm_rgs(fp, ship):
     :type fp: string, or list of strings
     :param ship: ship name
     :type ship: string
+    :param progressbar: display progress bar while list of files is read
+    :type progressbar: bool
 
     :returns: (*pd.DataFrame*) timestamps, raw gravity, and geographic coordinates
     """
@@ -382,7 +386,7 @@ def read_bgm_rgs(fp, ship):
         fp = [fp,]  # make a list if only one path is given
 
     dats = []
-    for path in fp:
+    for path in tqdm(fp, desc='reading RGS files', disable=~progressbar):
         dat = pd.read_csv(path, delimiter=' ', names=['date', 'time', 'grav', 'lat', 'lon'],
                           usecols=(1, 2, 3, 11, 12))
         dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
@@ -391,7 +395,7 @@ def read_bgm_rgs(fp, ship):
     return pd.concat(dats, ignore_index=True)
 
 
-def read_bgm_raw(fp, ship, scale=None, ship_function=None):
+def read_bgm_raw(fp, ship, scale=None, ship_function=None, progressbar=True):
     """Read BGM gravity from raw (serial) files (not RGS).
 
     This function uses scale factors determined for specific BGM meters
@@ -408,6 +412,8 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None):
         The function should return a pandas.DataFrame with timestamps and counts.
         Look at _bgmserial_Atlantis() and similar functions for examples.
     :type ship_function: function, optional
+    :param progressbar: display progress bar while list of files is read
+    :type progressbar: bool
 
     :return: (*pd.DataFrame*) timestamps and calibrated raw gravity values
     """
@@ -430,7 +436,7 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None):
     if type(fp) is str:
         fp = [fp,]  # make a list if only one path is given
     dats = []
-    for path in fp:
+    for path in tqdm(fp,desc='reading BGM files',disable=~progressbar):
         if ship_function != None:
             dat = ship_function(path)
         else:
@@ -520,7 +526,7 @@ def _despike_bgm_serial(dat, thresh=8000):
 ########################################################################
 
 
-def read_dgs_laptop(fp, ship, ship_function=None):
+def read_dgs_laptop(fp, ship, ship_function=None, progressbar=True):
     """Read DGS 'laptop' file(s), usually written as .dat files.
 
     :param fp: filepath(s)
@@ -531,6 +537,8 @@ def read_dgs_laptop(fp, ship, ship_function=None):
         The function should return a pandas.DataFrame. See _dgs_laptop_general()
         for an example.
     :type ship_function: function, optional
+    :param progressbar: display progress bar while list of files is read
+    :type progressbar: bool
 
     :return: *(pd.DataFrame)* DGS output time series
     """
@@ -538,7 +546,7 @@ def read_dgs_laptop(fp, ship, ship_function=None):
         fp = [fp,]  # listify
 
     dats = []
-    for path in tqdm(fp,desc='reading DGS files'):
+    for path in tqdm(fp,desc='reading DGS files',disable=~progressbar):
         if ship_function is not None:
             dat = ship_function(path)
         else:
@@ -577,7 +585,7 @@ def _dgs_laptop_Thompson(path):
     return dat
 
 
-def read_dgs_raw(fp, ship, scale_ccp=True):
+def read_dgs_raw(fp, ship, scale_ccp=True, progressbar=True):
     """Read raw (serial) output files from DGS AT1M.
 
     These will be in AD units mostly.
@@ -589,6 +597,8 @@ def read_dgs_raw(fp, ship, scale_ccp=True):
     :type fp: string or list of strings
     :param ship: ship name
     :type ship: string
+    :param progressbar: display progress bar while list of files is read
+    :type progressbar: bool
 
     :return: (*pd.DataFrame*) DGS output time series
     """
@@ -596,7 +606,7 @@ def read_dgs_raw(fp, ship, scale_ccp=True):
     if type(fp) is str:
         fp = [fp,]  # listify
     dats = []
-    for path in tqdm(fp,desc='reading DGS files'):
+    for path in tqdm(fp,desc='reading DGS files',disable=~progressbar):
         if ship == 'Thompson':  # always with the special file formats
             dat = _dgs_raw_Thompson(path)
         else:  # there might be exceptions besides Thompson but I don't know about them yet
