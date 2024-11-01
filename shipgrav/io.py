@@ -73,7 +73,7 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, progre
     lonlon = np.array([])
     latlat = np.array([])
 
-    for fpath in tqdm(pathlist,desc='reading nav',disable=~progressbar):  # loop nav files (may be a lot of them)
+    for fpath in tqdm(pathlist,desc='reading nav',disable=not progressbar):  # loop nav files (may be a lot of them)
         with open(fpath, 'r') as f:
             allnav = np.array(f.readlines())  # read the entire file
 
@@ -391,7 +391,7 @@ def read_bgm_rgs(fp, ship, progressbar=True):
         fp = [fp,]  # make a list if only one path is given
 
     dats = []
-    for path in tqdm(fp, desc='reading RGS files', disable=~progressbar):
+    for path in tqdm(fp, desc='reading RGS files', disable=not progressbar):
         dat = pd.read_csv(path, delimiter=' ', names=['date', 'time', 'grav', 'lat', 'lon'],
                           usecols=(1, 2, 3, 11, 12))
         dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
@@ -441,7 +441,7 @@ def read_bgm_raw(fp, ship, scale=None, ship_function=None, progressbar=True):
     if type(fp) is str:
         fp = [fp,]  # make a list if only one path is given
     dats = []
-    for path in tqdm(fp,desc='reading BGM files',disable=~progressbar):
+    for path in tqdm(fp,desc='reading BGM files',disable=not progressbar):
         if ship_function != None:
             dat = ship_function(path)
         else:
@@ -549,7 +549,7 @@ def read_dgs_laptop(fp, ship, ship_function=None, progressbar=True):
         fp = [fp,]  # listify
 
     dats = []
-    for path in tqdm(fp,desc='reading DGS files',disable=~progressbar):
+    for path in tqdm(fp,desc='reading DGS files',disable=not progressbar):
         if ship_function is not None:
             dat = ship_function(path)
         else:
@@ -609,7 +609,7 @@ def read_dgs_raw(fp, ship, scale_ccp=True, progressbar=True):
     if type(fp) is str:
         fp = [fp,]  # listify
     dats = []
-    for path in tqdm(fp,desc='reading DGS files',disable=~progressbar):
+    for path in tqdm(fp,desc='reading DGS files',disable=not progressbar):
         if ship == 'Thompson':  # always with the special file formats
             dat = _dgs_raw_Thompson(path)
         else:  # there might be exceptions besides Thompson but I don't know about them yet
