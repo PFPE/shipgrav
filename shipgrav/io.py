@@ -1,7 +1,7 @@
 import mmap
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 import numpy as np
 import pandas as pd
@@ -102,6 +102,9 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, progre
                 print(
                     'R/V %s not yet supported for nav read; must supply read function' % ship)
                 return -999
+
+        if type(timest) is int and timest == -999:
+            return timest  # eg looking for a talker that is not in a file
 
         # posix, seconds, for interpolation
         sec_time = np.array([d.timestamp() for d in timest])
@@ -267,6 +270,8 @@ def _navdate_Ride(allnav, talker):
     inav = [talker in s for s in allnav]  # find lines of file with this talker
     subnav = allnav[inav]  # select only those lines
     N = len(subnav)
+    if N == 0:
+        return -999
     # array for timestamps, as datetime objects
     timest = np.empty(N, dtype=datetime)
 
@@ -274,7 +279,7 @@ def _navdate_Ride(allnav, talker):
         if talker == 'INGGA':  # on Ride, uses posix timestamps
             date = re.findall(r'(\d+(\.\d*)?) \$%s' % talker, subnav[i])[0]
             timest[i] = datetime.fromtimestamp(
-                float(date[0]), tzinfo=timezone.utc)
+                float(date[0]), UTC)
         elif talker == 'GPGGA':  # includes time only with date, unlike other GPGGAs
             date = re.findall(
                 r'(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d.*?)Z', subnav[i])[0]
