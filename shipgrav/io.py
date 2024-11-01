@@ -1,7 +1,7 @@
 import mmap
 import os
 import re
-from datetime import datetime, timezone, UTC
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -279,7 +279,7 @@ def _navdate_Ride(allnav, talker):
         if talker == 'INGGA':  # on Ride, uses posix timestamps
             date = re.findall(r'(\d+(\.\d*)?) \$%s' % talker, subnav[i])[0]
             timest[i] = datetime.fromtimestamp(
-                float(date[0]), UTC)
+                float(date[0]), timezone.utc)
         elif talker == 'GPGGA':  # includes time only with date, unlike other GPGGAs
             date = re.findall(
                 r'(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d.*?)Z', subnav[i])[0]
