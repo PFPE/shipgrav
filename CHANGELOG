@@ -1,3 +1,20 @@
+2024-11-01  Hannah F Mark  <hmark@whoi.edu>
+
+    * update dependencies and docs
+    * add a flag to turn progress bars on/off so tests are cleaner
+    * add more tests for better coverage, fix bugs discovered by tests
+    * format example scripts for jupytext, update docs and optional dependencies
+    * update example scripts to use pooch for download, delete data_download script
+    * add progress bars for things (mostly file reads) and tqdm dependency
+
+2024-10-29  Hannah F Mark  <hmark@whoi.edu>
+
+    * clean/format code with isort and flake8
+    * update triggers for test workflow: run on push and on PR
+    * use abs path for example files so tests can be run from outside tests/ dir
+
+v1.0.3
+
 2024-10-25  Hannah F Mark  <hmark@whoi.edu>
 
     * update pkg_resources (deprecated from 3.13) to importlib.resources for test suite
@@ -12,6 +29,14 @@
     * update CONTRIBUTORS -> to markdown, with info on who did what prior to github upload
     * fix indexing in one part of RMBA example script for future deprecation of chained assignment
     * add detail to contributor guidelines
+
+v1.0.2
+
+2024-09-17  Hannah F Mark  <hmark@whoi.edu>
+
+    * update docs and optional dependencies
+
+v1.0.1
 
 2024-07-15  Hannah F Mark  <hmark@whoi.edu>
 
