@@ -26,9 +26,8 @@ dependencies = [
     "tomli",
     "statsmodels",
     "pyyaml",
-    "tqdm",
-    "pooch"
+    "tqdm"
 ]
 
 [project.optional-dependencies]
-examples = ["matplotlib", "geographiclib", "jupyterlab", "jupytext"]
+examples = ["matplotlib", "geographiclib", "jupyterlab", "jupytext", "pooch"]

@@ -25,7 +25,7 @@ shipgrav's dependencies are
 * tomli
 * pyyaml
 * tqdm
-* pooch
+* pooch (optional, needed to run the example scripts)
 * matplotlib (optional, needed to run some of the example scripts)
 * geographiclib (optional, needed to run one of the example scripts)
 * jupyterlab (optional, if you want to run example scripts in jupyter)
