@@ -98,6 +98,9 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, progre
             elif ship == 'Langseth':
                 lon, lat = _navcoords(allnav, talker)
                 timest = _navdate_Langseth(allnav, talker)
+            elif ship == 'Sikuliaq' and talker == 'GPGGA':
+                lon, lat = _navcoords(allnav, talker)
+                timest = _navdate_Ride(allnav, talker)
             else:  # in theory we never get to this option, but catch just in case
                 print(
                     'R/V %s not yet supported for nav read; must supply read function' % ship)
@@ -232,7 +235,7 @@ def _navdate_Thompson(allnav, talker):
 
 
 def _navdate_Revelle(allnav, talker):
-    """Extract datetime info from Revelle nav files (mru_seapatah330_rr_navbho-*.txt).
+    """Extract datetime info from Revelle nav files (mru_seapath330_rr_navbho-*.txt).
     """
     hour, mint, sec, msec = _clock_time(allnav, talker)
 

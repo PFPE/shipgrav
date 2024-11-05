@@ -13,6 +13,7 @@ NBP = 'GPGGA'
 Ride = 'INGGA'
 Revelle = 'GPGGA'
 Langseth = 'INGGA'
+Sikuliaq = 'GPGGA'
 
 [BGM-scale]
 Atlantis = 4.994070552
