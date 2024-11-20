@@ -31,7 +31,7 @@ shipgrav's dependencies are
 * jupyterlab (optional, if you want to run example scripts in jupyter)
 * jupytext (optional, if you want to run example scripts in jupyter)
 
-If you install shipgrav with ``pip``, it will also install any of the required dependencies that are missing. To make ``pip`` include the optional dependencies, run ``pip install shipgrav[examples]``.
+If you install shipgrav with ``pip``, it will also install any of the required dependencies that are missing. To make ``pip`` include the optional dependencies, run ``pip install shipgrav[examples]``. Depending on your operating system and shell, you may need to escape the brackets (i.e. ``pip install shipgrav\[examples\]``).
 
 The example scripts are `available on github <https://github.com/PFPE/shipgrav>`_. They are not packaged with the PyPI package and must be downloaded separately.
 
