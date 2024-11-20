@@ -94,6 +94,8 @@ dgs_data['grav'] = dgs_data['rgrav'] + biases['dgs']
 # %%
 # read and sort the BGM data
 bgm_data = sgi.read_bgm_raw(bgm_files, ship)
+bgm_data.sort_values('date_time', inplace=True)
+bgm_data.reset_index(inplace=True, drop=True)
 bgm_data['tsec'] = [e.timestamp() for e in bgm_data['date_time']]
 bgm_data['grav'] = bgm_data['rgrav'] + biases['bgm']
 
