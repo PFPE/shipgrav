@@ -1,3 +1,9 @@
+v1.0.6
+
+2024-11-21  Hannah F Mark  <hmark@whoi.edu>
+
+    * another minor version bump after linking zenodo so release can get a DOI
+
 v1.0.5
 
 2024-11-20  Hannah F Mark  <hmark@whoi.edu>
