@@ -560,6 +560,8 @@ def read_dgs_laptop(fp, ship, ship_function=None, progressbar=True):
                 dat = _dgs_laptop_general(path)
             elif ship == 'Thompson':
                 dat = _dgs_laptop_Thompson(path)
+            elif ship == 'Sikuliaq':
+                dat = _dgs_laptop_Sikuliaq(path)
             else:
                 print('R/V %s not supported for dgs laptop file read' % ship)
                 return -999
@@ -578,6 +580,17 @@ def _dgs_laptop_general(path):
                       usecols=(1, 2, 3, 6, 10, 11, 12, 13, 14, 15, 19, 20, 21, 22, 23, 24))
     dat['date_time'] = pd.to_datetime(
         dat[['year', 'month', 'day', 'hour', 'minute', 'second']], utc=True)
+    return dat
+
+
+def _dgs_laptop_Sikuliaq(path):
+    """Read single laptop file for Sikuliaq, has more of a header than the others
+    """
+    dat = pd.read_csv(path,skiprows=19,names=['rgrav','long_a','crss_a','status','ve','vcc',
+                                              'al','ax','lat','lon','year','month','day',
+                                              'hour','minute','second'],
+                      usecols=(1,2,3,6,10,11,12,13,14,15,19,20,21,22,23,24))
+    dat['date_time'] = pd.to_datetime(dat[['year','month','day','hour','minute','second']],utc=True)
     return dat
 
 
