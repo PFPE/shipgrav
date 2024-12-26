@@ -17,7 +17,7 @@ from tqdm import tqdm
 ########################################################################
 
 
-def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, progressbar=True):
+def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, decimate=0, progressbar=True):
     """ Read navigation strings from .GPS (or similar) files.
 
     Ships have different formats and use different talkers for preferred
@@ -38,6 +38,8 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, progre
         This function should return arrays of lon, lat, and timestamps.
         Look at _navcoords() and navdate_Atlantis() (and similar functions) for examples.
     :type ship_function: function, optional
+    :param decimate: integer skip for decimating data, default 0 returns all points
+    :type decimate: int, optional
     :param progressbar: display progress bar while list of files is read
     :type progressbar: bool
 
@@ -118,6 +120,12 @@ def read_nav(ship, pathlist, sampling=1, talker=None, ship_function=None, progre
         # interpolate to desired sample rate
         lon_out = np.interp(sec_time, sec_time[idx], lon[idx])
         lat_out = np.interp(sec_time, sec_time[idx], lat[idx])
+
+        # decimate if we're doing that
+        if decimate:
+            sec_time = sec_time[::decimate]
+            lon_out = lon_out[::decimate]
+            lat_out = lat_out[::decimate]
 
         timetime = np.append(timetime, sec_time)
         lonlon = np.append(lonlon, lon_out)
@@ -325,14 +333,16 @@ def _navcoords(allnav, talker):
         post = subnav[i].split(talker)[-1].lstrip().split(',')
         if post[0] == '':
             post = post[1:]  # correct for spacing in some files
-
-        lat[i] = int(post[1][:2]) + float(post[1][2:]) / \
-            60  # convert to decimal degrees
-        if post[2] == 'S':
-            lat[i] = -lat[i]         # handle coordinate sign
-        lon[i] = int(post[3][:3]) + float(post[3][3:])/60
-        if post[4] == 'W':
-            lon[i] = -lon[i]
+        if post[1] == '' or post[3] == '':  # no coords, nav dropped out?
+            lat[i] = np.nan; lon[i] = np.nan
+        else:
+            lat[i] = int(post[1][:2]) + float(post[1][2:]) / \
+                60  # convert to decimal degrees
+            if post[2] == 'S':
+                lat[i] = -lat[i]         # handle coordinate sign
+            lon[i] = int(post[3][:3]) + float(post[3][3:])/60
+            if post[4] == 'W':
+                lon[i] = -lon[i]
 
     return lon, lat
 
