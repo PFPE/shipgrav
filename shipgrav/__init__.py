@@ -62,7 +62,7 @@ Navigation data
 
 Which navigation data should you use to process gravimeter data?
 
-In an ideal world, the gravimeter pulls navigation info from the ship's feed and synchronizes it perfectly with acquisition such that the output files have the correct geographic coordinates in them at the start. In practice, this synchronization doesn't always work as expected (see ``example-scripts/dgs_raw_comp.py`` for a case where the serial files do not have GPS info). So, we like to take the timestamped navigation data directly from the ship's feed and match up the gravimeter timestamps to obtain more accurate coordinates.
+In an ideal world, the gravimeter pulls navigation info from the ship's feed and synchronizes it perfectly with acquisition such that the output files have the correct geographic coordinates in them at the start. In practice, this synchronization doesn't always work as expected (see ``example-scripts/dgs_raw_comp.py`` for a case where the serial files do not have GPS info). So, we like to take the timestamped navigation data directly from the ship's feed and match up the gravimeter timestamps to obtain more accurate coordinates. Using navigation from a feed separate from the gravimeter is **highly recommended**.
 
 The database file included in shipgrav lists the navigation talkers that we expect are good to use for specific UNOLS vessels. Find the files that contain those feeds, and you should be able to read in timestamped coordinates from them.
 
@@ -94,10 +94,10 @@ The data files can be downloaded from R2R and Zenodo, and the scripts will do th
    :height: 250px
    :align: center
 
-``dgs_ccp_calc.py`` reads DGS files from R/V Thompson cruise TN400, calculates the FAA and various kinematic variables, and fits for cross-coupling coefficients. The cross-coupling correction is applied and the data are plotted with and without correction.
+``dgs_ccp_calc.py`` reads DGS files from R/V Thompson cruise TN400, calculates the FAA and various kinematic variables, and fits for cross-coupling coefficients. The cross-coupling correction is applied and the data are plotted with and without correction. Satellite-derived FAA is also plotted
 
 .. image:: _static/TN400_ccp.png
-   :alt: FAA for TN400, with and without cross-coupling correction applied.
+   :alt: FAA for TN400, with and without cross-coupling correction applied; and satellite-derived FAA.
    :height: 250px
    :align: center
 
