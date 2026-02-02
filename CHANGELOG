@@ -1,3 +1,8 @@
+v1.0.8
+
+2026-02-02  Hannah F Mark  <hmark@whoi.edu>
+    * minor version bump to make the release work after updating sigstore
+
 v1.0.7
 
 2025-06-20  Hannah F Mark  <hmark@whoi.edu>
