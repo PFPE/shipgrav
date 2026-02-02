@@ -1,11 +1,11 @@
 [bias-values]
-Atlantis = {'dgs'=969758.4968, 'bgm'=855580.65}
-Thompson = {'dgs'=969527.3497, 'bgm'=855489.8}
+Atlantis = {'dgs'=969751.259, 'bgm'=855580.65}  # 2025
+Thompson = {'dgs'=969492.789, 'bgm'=855489.8}  # Jan 2026
 Revelle = {'dgs'=968888.6465, 'bgm'=855240.81987}
 NBP = {'dgs'=968634.2514, 'bgm'=-999}
 Ride = {'dgs'=968895.7718, 'bgm'=-999}
-Langseth = {'dgs'=-999, 'bgm'=854974.4}
-Sikuliaq = {'dgs'=969538.8152, 'bgm'=-999}
+Langseth = {'dgs'=969376.125, 'bgm'=854974.4}  # 2025
+Sikuliaq = {'dgs'=969538.8152, 'bgm'=-999}   #2025
 
 [nav-talkers]
 Atlantis = 'GPGGA'
