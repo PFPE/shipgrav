@@ -572,6 +572,8 @@ def read_dgs_laptop(fp, ship, ship_function=None, progressbar=True):
                 dat = _dgs_laptop_Thompson(path)
             elif ship == 'Sikuliaq':
                 dat = _dgs_laptop_Sikuliaq(path)
+            elif ship == 'Langseth':
+                dat = _dgs_laptop_Langseth(path)
             else:
                 print('R/V %s not supported for dgs laptop file read' % ship)
                 return -999
@@ -613,6 +615,62 @@ def _dgs_laptop_Thompson(path):
     dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
     return dat
 
+def _dgs_proc_Langseth(path):
+    """Read DGS laptop data from Langseth, which has a prefix of dgsdata yyyy:ddd:hh:mm:ss.ssss 
+    and some random errors of misaligned columns
+    """
+    cleaned, skipped = [], 0
+
+    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+        for ln_no, raw in enumerate(f, 1):
+            s = raw.lstrip()  # remove leading spaces before 'dgsdata'
+            # Remove optional prefix: "dgsdata yyyy:ddd:hh:mm:ss.ssss "
+            if s.startswith('dgsdata'):
+                parts = s.split(None, 2)
+                if len(parts) < 3:
+                    print(f"SKIP malformed prefix in {path}: line {ln_no}")
+                    skipped += 1
+                    continue
+                tail = parts[2].rstrip('\n')
+            else:
+                tail = s.rstrip('\n')
+            # Skip lines that are not 26 fields and report where they are
+            fields = tail.split(',')
+            if len(fields) != 26:
+                print(f"SKIP non-26-field line in {path}: line {ln_no} (NF={len(fields)})")
+                skipped += 1
+                continue
+
+            cleaned.append(','.join(fields) + '\n')
+
+    if skipped:
+        print(f"INFO: Skipped {skipped} line(s) in {path} (not 26 fields)")
+
+    if not cleaned:
+        # Return empty frame with expected columns if nothing valid
+        cols = ['rgrav','long_a','crss_a','status','ve','vcc','al','ax','lat','lon',
+                'year','month','day','hour','minute','second','date_time']
+        return pd.DataFrame(columns=cols)
+
+    buf = StringIO(''.join(cleaned))
+
+    # ---- Now this part is the same as _dgs_laptop_general ----
+    dat = pd.read_csv(
+        buf,
+        delimiter=',',
+        names=['rgrav', 'long_a', 'crss_a', 'status', 've', 'vcc',
+               'al', 'ax', 'lat', 'lon', 'year', 'month', 'day',
+               'hour', 'minute', 'second'],
+        usecols=(1, 2, 3, 6, 10, 11, 12, 13, 14, 15, 19, 20, 21, 22, 23, 24),
+        skipinitialspace=True,
+        engine='python'
+    )
+
+    dat['date_time'] = pd.to_datetime(
+        dat[['year', 'month', 'day', 'hour', 'minute', 'second']], utc=True
+    )
+    return dat
+
 
 def read_dgs_raw(fp, ship, scale_ccp=True, progressbar=True):
     """Read raw (serial) output files from DGS AT1M.
@@ -638,6 +696,8 @@ def read_dgs_raw(fp, ship, scale_ccp=True, progressbar=True):
     for path in tqdm(fp,desc='reading DGS files',disable=not progressbar):
         if ship == 'Thompson':  # always with the special file formats
             dat = _dgs_raw_Thompson(path)
+        elif ship == 'Sikuliaq':
+            dat = _dgs_raw_Sikuliaq(path)
         else:  # there might be exceptions besides Thompson but I don't know about them yet
             dat = _dgs_raw_general(path)
 
@@ -702,6 +762,25 @@ def _dgs_raw_Thompson(path):
         dat['stamps'], utc=True, format='%m/%d/%Y:%H:%M:%S.%f')
     dat.drop('stamps', axis=1, inplace=True)
 
+    return dat
+
+def _dgs_raw_Sikuliaq(path):
+    """Read raw gravity file for R/V Sikuliaq. Not extensively tested.
+    """
+    dat = pd.read_csv(path, comment='#', delimiter='\t', names=['logname', 'timestamp', 'raw'])
+
+    # Extract relevant fields
+    parts = dat['raw'].str.extract(
+        r'^\$AT1M_[^,]*,([-\d.]+),([-\d.]+),([-\d.]+),[^,]*,[^,]*,[^,]*,[^,]*,([-\d.]+),([-\d.]+),([-\d.]+),([-\d.]+),[^,]*,[^,]*,([-\d.]+),([-\d.]+)'
+    )
+    parts.columns = ['rgrav', 'long_a', 'crss_a', 'vcc', 've', 'al', 'ax', 'lat', 'lon']
+
+    # Convert to numeric
+    for col in parts.columns:
+        parts[col] = pd.to_numeric(parts[col], errors='coerce')
+
+    dat = pd.concat([dat[['timestamp']], parts], axis=1)
+    dat['date_time'] = pd.to_datetime(dat.pop('timestamp'), utc=True)
     return dat
 
 ########################################################################
