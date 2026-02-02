@@ -1,6 +1,11 @@
+v1.0.7
+
 2025-06-20  Hannah F Mark  <hmark@whoi.edu>
     * add nav interpolation to the TN400 cross-coupling example script; fixes dropout section
     * related: update documentation with new figure
+
+2024-12-25  Hannah F Mark  <hmark@whoi.edu>
+    * add option to decimate nav data, per file as it is being read
 
 v1.0.6
 
