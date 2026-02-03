@@ -615,7 +615,7 @@ def _dgs_laptop_Thompson(path):
     dat['date_time'] = pd.to_datetime(dat.pop('date')+' '+dat.pop('time'),utc=True)
     return dat
 
-def _dgs_proc_Langseth(path):
+def _dgs_laptop_Langseth(path):
     """Read DGS laptop data from Langseth, which has a prefix of dgsdata yyyy:ddd:hh:mm:ss.ssss 
     and some random errors of misaligned columns
     """
@@ -641,7 +641,7 @@ def _dgs_proc_Langseth(path):
                 skipped += 1
                 continue
 
-            cleaned.append(','.join(fields) + '\n')
+            cleaned.append(fields)
 
     if skipped:
         print(f"INFO: Skipped {skipped} line(s) in {path} (not 26 fields)")
@@ -652,23 +652,16 @@ def _dgs_proc_Langseth(path):
                 'year','month','day','hour','minute','second','date_time']
         return pd.DataFrame(columns=cols)
 
-    buf = StringIO(''.join(cleaned))
+    dat = pd.DataFrame(np.array(cleaned).T[[1, 2, 3, 6, 10, 11, 12, 13, 14, 15, 19, 20, 21, 22, 23, 24]].T,
+            columns=['rgrav', 'long_a', 'crss_a', 'status', 've', 'vcc','al', 'ax', 
+            'lat', 'lon', 'year', 'month', 'day','hour', 'minute', 'second'])
 
-    # ---- Now this part is the same as _dgs_laptop_general ----
-    dat = pd.read_csv(
-        buf,
-        delimiter=',',
-        names=['rgrav', 'long_a', 'crss_a', 'status', 've', 'vcc',
-               'al', 'ax', 'lat', 'lon', 'year', 'month', 'day',
-               'hour', 'minute', 'second'],
-        usecols=(1, 2, 3, 6, 10, 11, 12, 13, 14, 15, 19, 20, 21, 22, 23, 24),
-        skipinitialspace=True,
-        engine='python'
-    )
+    # Convert to numeric
+    for col in dat.columns:
+        dat[col] = pd.to_numeric(dat[col], errors='coerce')
 
     dat['date_time'] = pd.to_datetime(
-        dat[['year', 'month', 'day', 'hour', 'minute', 'second']], utc=True
-    )
+        dat[['year', 'month', 'day', 'hour', 'minute', 'second']], utc=True)
     return dat
 
 
