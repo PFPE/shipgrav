@@ -1,3 +1,14 @@
+v1.0.10
+
+2026-02-04  Hannah F Mark  <hmark@whoi.edu>
+    * debug Langseth read function
+    * add tests for Langseth laptop, SKQ laptop+raw read functions
+    * update test suite for deprecated unittest.makeSuite() in python 3.13
+
+2026-02-02  Hannah F Mark  <hmark@whoi.edu>
+    * add functions for Langseth DGS laptop and Sikuliaq DGS raw file read
+    * update some of the biases in the database for 2025/26
+
 v1.0.9
 
 2026-02-02  Hannah F Mark  <hmark@whoi.edu>
