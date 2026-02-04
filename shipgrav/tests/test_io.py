@@ -94,6 +94,18 @@ class ioTestCase(unittest.TestCase):
         self.assertEqual(dgs.iloc[0]['ve'], 2e-5)
         self.assertTrue(dgs.iloc[0]['rgrav'] - 9995.95186 < 0.0001)
 
+    def test_read_dgs_dat_Langseth(self):
+        dgs = sgi.read_dgs_laptop(f'{self.ex_files}'+os.sep+'MGL_dgsdata.y2025d254', 'Langseth', progressbar=False)
+        self.assertEqual(dgs.iloc[0]['date_time'].timestamp(), 1757548800.91)
+        self.assertEqual(dgs.iloc[0]['ve'], 0.32308)
+        self.assertTrue(dgs.iloc[0]['rgrav'] - 1483.1871291 < 0.0001)
+
+    def test_read_dgs_dat_Sikuliaq(self):
+        dgs = sgi.read_dgs_laptop(f'{self.ex_files}'+os.sep+'SKQ_dgs_proc.20241213T0000Z', 'Sikuliaq', progressbar=False)
+        self.assertEqual(dgs.iloc[0]['date_time'].timestamp(), 1734047995.0)
+        self.assertEqual(dgs.iloc[0]['ve'], 0.00235)
+        self.assertTrue(dgs.iloc[0]['rgrav'] - 9288.4046923 < 0.0001)
+
     def test_read_dgs_dat_nope(self):
         dgs = sgi.read_dgs_laptop(f'{self.ex_files}'+os.sep+'DGStest_laptop.dat', 'Katama', progressbar=False)
         self.assertEqual(dgs, -999)
@@ -111,6 +123,13 @@ class ioTestCase(unittest.TestCase):
             dgs.iloc[0]['date_time'].timestamp(), 1647101046.634)
         self.assertEqual(dgs.iloc[0]['Gravity'], -82)
         self.assertTrue(dgs.iloc[0]['vcc'] - 0.0357100 < 0.0001)
+
+    def test_read_dgs_raw_Sikuliaq(self):
+        dgs = sgi.read_dgs_raw(f'{self.ex_files}'+os.sep+'SKQ_dgs_raw.20241018T2212Z', 'Sikuliaq', progressbar=False)
+        self.assertEqual(
+            dgs.iloc[0]['date_time'].timestamp(), 1729289555.6591)
+        self.assertEqual(dgs.iloc[0]['rgrav'], 19964)
+        self.assertTrue(dgs.iloc[0]['vcc'] - 0.30569 < 0.001)
 
     def test_read_mru(self):
         mru, cols = sgi.read_other_stuff(

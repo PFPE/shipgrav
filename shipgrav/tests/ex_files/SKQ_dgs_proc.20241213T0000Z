@@ -1,0 +1,21 @@
+# Platform:
+#   Name: R/V Sikuliaq
+#   Operator: UAF
+#   IMO Number: 9578945
+#   ICES Code: 33BI
+#   Call Sign: WDN7246
+#   MMSI Number: 338417000
+# Cruise ID: SKQ202418S
+#
+# Instrument:
+#   Name: Dynamic Gravity Systems Advanced Technology Marine Gravimeter
+#   Model: AT1-M
+#   Serial Number: 33
+#   Location: Aft inboard wall of tech workshop, 1-12-1
+#   Installation Date: 28 November 2023
+#
+# Parameters:
+# Log Name	Log Time	QC_Gravity, Gravity, Long accelerometer, Cross accelerometer, beam, Sensor Temp, STATUS, Checksum, Pressure, Etemp, Ve, Vcc, Al, Ax, Latitude, Longitude, Speed, Course, VMOND, Year, Month, Day Hours, Min, Seconds, NumLine
+#
+grav_dgs_33_proc	2024-12-13T00:00:00.4059Z	9389.827772838045,9288.404692385160, -0.023006441952, -0.112389577912, -0.981155312199, 52.255832250000,           20766,         4039201, 28.944054383333, 51.226372500000,  0.002350000000,  0.436120000000,  0.005350000000,  0.001870000000, 21.315802416667,-157.877074616667,  0.000000000000,  8.140000000000,  0.160753801557,2024,12,12,23,59,55.00,5196653
+grav_dgs_33_proc	2024-12-13T00:00:01.3929Z	9389.825061856613,9323.774367216154, -0.035286907588, -0.139204518700, -0.981177961967, 52.256280125000,           20766,         4036172, 28.944054383333, 51.225338333333,  0.002200000000,  0.404080000000,  0.005640000000,  0.002050000000, 21.315802483333,-157.877074600000,  0.000000000000,318.940000000000,  0.160422031783,2024,12,12,23,59,56.00,5196654
