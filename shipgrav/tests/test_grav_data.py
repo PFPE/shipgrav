@@ -74,7 +74,7 @@ class gravDataTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(gravDataTestCase, 'test')
+    return unittest.defaultTestLoader.loadTestsFromTestCase(gravDataTestCase)
 
 
 if __name__ == '__main__':

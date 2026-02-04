@@ -35,7 +35,7 @@ class navTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(navTestCase, 'test')
+    return unittest.defaultTestLoader.loadTestsFromTestCase(navTestCase)
 
 
 if __name__ == '__main__':

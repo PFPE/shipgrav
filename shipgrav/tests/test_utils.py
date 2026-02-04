@@ -27,7 +27,7 @@ class utilsTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(utilsTestCase, 'test')
+    return unittest.defaultTestLoader.loadTestsFromTestCase(utilsTestCase)
 
 
 if __name__ == '__main__':

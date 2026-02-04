@@ -140,7 +140,7 @@ class ioTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(ioTestCase, 'test')
+    return unittest.defaultTestLoader.loadTestsFromTestCase(ioTestCase)
 
 
 if __name__ == '__main__':

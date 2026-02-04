@@ -58,7 +58,7 @@ class gravNoDataTestCase(unittest.TestCase):
         self.assertTrue(sdat[0,0] - 130.877533 < 0.001)
 
 def suite():
-    return unittest.makeSuite(gravNoDataTestCase, 'test')
+    return unittest.defaultTestLoader.loadTestsFromTestCase(gravNoDataTestCase)
 
 
 if __name__ == '__main__':
