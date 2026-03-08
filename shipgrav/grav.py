@@ -264,7 +264,7 @@ def eotvos_full(lon, lat, ht, samp, a=6378137.0, b=6356752.3142):
     ci = -ddrp*np.sin(D) - 2.*drp*dD*np.cos(D) - rp * \
         (ddD*np.cos(D) - dD*dD*np.sin(D))
     ck = -ddrp*np.cos(D) + 2.*drp*dD*np.sin(D) + rp * \
-        (ddD*np.sin(D) + dD*dD*np.cos(D) - ddht)
+        (ddD*np.sin(D) + dD*dD*np.cos(D)) - ddht
     rdotdot = np.vstack((ci, np.zeros(len(ci)), ck)).T
 
     # define w and derivative
@@ -300,7 +300,7 @@ def eotvos_full(lon, lat, ht, samp, a=6378137.0, b=6356752.3142):
 ########################################################################
 
 
-def free_air_second_order(lat, ht):
+def free_air_second_order(lat, ht, free_water=False):
     """ 2nd order free-air correction
 
     :param lat: latitude, degrees
@@ -312,7 +312,10 @@ def free_air_second_order(lat, ht):
     """
     s2lat = np.sin(np.deg2rad(lat))**2
 
-    return -((0.3087691 - 0.0004398*s2lat)*ht) + 7.2125e-8*(ht**2)
+    if not free_water:
+        return -((0.3087691 - 0.0004398*s2lat)*ht) + 7.2125e-8*(ht**2)
+    else:
+        return -((0.22242 - 0.0004398*s2lat)*ht) + 7.2125e-8*(ht**2)
 
 
 def wgs_grav(lat):
