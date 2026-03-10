@@ -1,3 +1,9 @@
+v1.0.11
+
+2026-03-07  Hannah F Mark  <hmark@whoi.edu>
+    * add option for free water correction to second-order free air function
+    * fix a typo in paren placement in the Eotvos function
+
 v1.0.10
 
 2026-02-04  Hannah F Mark  <hmark@whoi.edu>
